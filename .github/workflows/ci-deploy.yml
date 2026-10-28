@@ -54,7 +54,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chrome
       - name: Browser lifecycle and PostgreSQL regression checks
-        run: npx playwright test tests/e2e/workspace.spec.ts tests/e2e/review-kpis.spec.ts tests/e2e/kanban.spec.ts tests/e2e/calendar-processing.spec.ts tests/e2e/review-type-filter.spec.ts tests/e2e/signup-code.spec.ts tests/e2e/earnings.spec.ts tests/e2e/order-trend.spec.ts tests/e2e/insight-period.spec.ts tests/e2e/chart-tooltip.spec.ts
+        run: npx playwright test tests/e2e/workspace.spec.ts tests/e2e/review-kpis.spec.ts tests/e2e/kanban.spec.ts tests/e2e/calendar-processing.spec.ts tests/e2e/review-type-filter.spec.ts tests/e2e/signup-code.spec.ts tests/e2e/earnings.spec.ts tests/e2e/order-trend.spec.ts tests/e2e/insight-period.spec.ts tests/e2e/chart-tooltip.spec.ts tests/e2e/auth-mobile.spec.ts
         env:
           DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
   deploy:

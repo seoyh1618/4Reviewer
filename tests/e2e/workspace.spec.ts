@@ -167,7 +167,9 @@ test("real signup, create, edit, review, partial payment, full payment, export a
     .getByRole("button", { name: "통계", exact: true })
     .click();
   await expect(
-    page.locator(".platform-stats").getByText("G마켓", { exact: true }),
+    page
+      .getByRole("region", { name: "플랫폼별 주문", exact: true })
+      .getByText("G마켓", { exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "로그아웃", exact: true }).click();
   await expect(page.getByRole("heading", { name: "SIGN IN" })).toBeVisible();
