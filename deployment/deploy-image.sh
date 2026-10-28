@@ -32,7 +32,12 @@ if "${compose[@]}" up -d --no-deps --wait --wait-timeout 90 app; then
   printf 'Deployed %s\n' "$revision"
 else
   cp .env.previous .env
-  "${compose[@]}" up -d --no-deps --wait --wait-timeout 90 app
-  echo 'Application deployment failed; previous app restored.' >&2
+  previous_image=$(sed -n 's/^APP_IMAGE=//p' .env)
+  if docker image inspect "$previous_image" >/dev/null 2>&1; then
+    "${compose[@]}" up -d --no-deps --wait --wait-timeout 90 app
+    echo 'Application deployment failed; previous app restored.' >&2
+  else
+    echo 'Initial application deployment failed; no previous image exists.' >&2
+  fi
   exit 1
 fi
