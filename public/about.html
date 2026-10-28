@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>포 리뷰어 소개 | 리뷰어를 위한 리뷰·페이백 관리</title>
+    <meta
+      name="description"
+      content="포 리뷰어(For Reviewer)는 리뷰어의 상품 등록, 리뷰 일정, 페이백 정산과 활동 수익을 한곳에서 관리하는 서비스입니다. PC와 모바일에서 나만의 리뷰 기록을 관리하세요."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://forreviwer.com/about.html" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="포 리뷰어" />
+    <meta
+      property="og:title"
+      content="포 리뷰어 | 리뷰어를 위한 리뷰·페이백 관리"
+    />
+    <meta
+      property="og:description"
+      content="상품 등록부터 리뷰 일정, 페이백 정산과 활동 수익까지 한곳에서 관리하세요."
+    />
+    <meta property="og:url" content="https://forreviwer.com/about.html" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+          "Malgun Gothic", sans-serif;
+        color: #1f2937;
+        background: #f7f9fc;
+        line-height: 1.75;
+        word-break: keep-all;
+      }
+      .wrap {
+        width: min(960px, 100%);
+        margin: auto;
+        padding: 0 24px;
+      }
+      header {
+        background: #fff;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      nav {
+        min-height: 76px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      a {
+        color: #1d4ed8;
+        text-underline-offset: 4px;
+      }
+      a:focus-visible {
+        outline: 3px solid #2563eb;
+        outline-offset: 4px;
+      }
+      .brand {
+        color: #1f2937;
+        font-weight: 700;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .brand img {
+        width: 34px;
+        height: 34px;
+      }
+      .brand small {
+        color: #526078;
+        font-weight: 400;
+      }
+      .hero {
+        padding: 68px 0 42px;
+        max-width: 720px;
+      }
+      .eyebrow {
+        color: #1d4ed8;
+        font-size: 13px;
+        margin: 0 0 12px;
+      }
+      h1 {
+        font-size: clamp(28px, 5vw, 40px);
+        letter-spacing: -0.04em;
+        line-height: 1.4;
+        margin: 0 0 18px;
+        font-weight: 650;
+      }
+      .lead {
+        color: #526078;
+        font-size: 17px;
+        margin: 0 0 26px;
+      }
+      .button {
+        display: inline-flex;
+        min-height: 46px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9px;
+        background: #2563eb;
+        color: #fff;
+        padding: 10px 22px;
+        text-decoration: none;
+        font-size: 14px;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+      article,
+      .how {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 26px;
+      }
+      article span {
+        font-size: 12px;
+        color: #1d4ed8;
+      }
+      h2 {
+        font-size: 18px;
+        margin: 8px 0 10px;
+        letter-spacing: -0.02em;
+      }
+      article p,
+      .how p {
+        color: #526078;
+        margin: 0;
+        font-size: 14px;
+      }
+      .how {
+        margin: 24px 0 48px;
+      }
+      .how h2 {
+        margin-top: 0;
+      }
+      ol {
+        padding-left: 22px;
+        font-size: 14px;
+        color: #526078;
+      }
+      li {
+        padding: 4px 0;
+      }
+      footer {
+        padding: 24px 0 32px;
+        border-top: 1px solid #e2e8f0;
+        font-size: 12px;
+        color: #526078;
+      }
+      @media (max-width: 600px) {
+        .wrap {
+          padding: 0 18px;
+        }
+        .cards {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          padding: 40px 0 28px;
+        }
+        .brand small {
+          display: none;
+        }
+        article,
+        .how {
+          padding: 22px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <nav class="wrap" aria-label="서비스 메뉴">
+        <a class="brand" href="/"
+          ><img src="/favicon.svg" alt="" />포 리뷰어
+          <small>For Reviewer</small></a
+        >
+        <a href="/">로그인 / 회원가입</a>
+      </nav>
+    </header>
+    <main class="wrap">
+      <section class="hero">
+        <p class="eyebrow">리뷰어를 위한 나만의 관리 공간</p>
+        <h1>포 리뷰어<br />리뷰부터 페이백까지, 한곳에서.</h1>
+        <p class="lead">
+          상품마다 흩어진 주문 정보와 리뷰 일정, 받아야 할 페이백을 정리하세요.
+          포 리뷰어는 PC와 모바일에서 개인별 리뷰 기록을 관리하는 서비스입니다.
+        </p>
+        <a class="button" href="/">포 리뷰어 시작하기</a>
+      </section>
+      <section class="cards" aria-label="포 리뷰어 주요 기능">
+        <article>
+          <span>01 · 상품 등록</span>
+          <h2>주문내역으로 간편하게</h2>
+          <p>
+            주문내역 이미지를 올리면 OCR로 상품명·구매금액·주문번호 등의 입력을
+            도와줍니다. 인식 결과를 확인하고 수정한 뒤 저장할 수 있습니다.
+          </p>
+        </article>
+        <article>
+          <span>02 · 리뷰 관리</span>
+          <h2>작성 전부터 리뷰 완료까지</h2>
+          <p>
+            구매 플랫폼, 리뷰 유형, 실배송·빈박스 구분과 담당자 정보를
+            정리하세요. 리뷰 작성일은 캘린더와 활동 차트에서 확인할 수 있습니다.
+          </p>
+        </article>
+        <article>
+          <span>03 · 페이백 정산</span>
+          <h2>받을 금액과 받은 금액을 구분</h2>
+          <p>
+            상품값 페이백과 추가 리뷰비, 부분 입금과 정산 완료를 기록하세요.
+            리뷰 완료와 입금 완료를 각각 관리합니다.
+          </p>
+        </article>
+        <article>
+          <span>04 · 활동 통계</span>
+          <h2>주문과 수익을 한눈에</h2>
+          <p>
+            월별·일별 주문 및 리뷰 활동을 살펴보세요. 입금된 리뷰비와 실배송
+            상품 가치를 구분해 현금 수익·상품 수익·총수익을 확인할 수 있습니다.
+          </p>
+        </article>
+      </section>
+      <section class="how">
+        <h2>포 리뷰어 이용 방법</h2>
+        <ol>
+          <li>
+            이메일 또는 아이디 중 하나와 전달받은 회원가입 코드로 계정을
+            만드세요.
+          </li>
+          <li>상품을 직접 등록하거나 주문내역 이미지로 입력을 시작하세요.</li>
+          <li>
+            리뷰 작성과 페이백 입금 시 정보를 기록하고 대시보드에서 확인하세요.
+          </li>
+        </ol>
+        <p>
+          개인 상품과 정산 내역은 로그인 후 이용합니다. 리뷰 템플릿을 그룹별로
+          정리하고 수정·복사할 수도 있습니다.
+        </p>
+      </section>
+    </main>
+    <footer>
+      <div class="wrap">
+        포 리뷰어 · For Reviewer <span aria-hidden="true">/</span>
+        <a href="/">서비스 바로가기</a>
+      </div>
+    </footer>
+  </body>
+</html>

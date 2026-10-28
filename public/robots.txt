@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /ocr/
+Disallow: /*?view=
+Disallow: /*&view=
+
+Sitemap: https://forreviwer.com/sitemap.xml
