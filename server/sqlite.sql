@@ -1,0 +1,25 @@
+PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
+CREATE TABLE IF NOT EXISTS users (id TEXT PRIMARY KEY,email TEXT UNIQUE,username TEXT,name TEXT NOT NULL,password TEXT NOT NULL,is_demo INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL,CHECK(email IS NOT NULL OR username IS NOT NULL));
+CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,expires_at INTEGER NOT NULL);
+CREATE TABLE IF NOT EXISTS reviews (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,data TEXT NOT NULL,created_at TEXT NOT NULL,updated_at TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1);
+CREATE INDEX IF NOT EXISTS reviews_user ON reviews(user_id);
+CREATE TABLE IF NOT EXISTS activities (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,review_id TEXT NOT NULL,label TEXT NOT NULL,amount INTEGER NOT NULL DEFAULT 0,created_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS activities_user ON activities(user_id,created_at);
+CREATE TABLE IF NOT EXISTS payments (id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,review_id TEXT NOT NULL REFERENCES reviews(id) ON DELETE CASCADE,amount INTEGER NOT NULL,paid_at TEXT NOT NULL);
+CREATE INDEX IF NOT EXISTS payments_user ON payments(user_id,paid_at);
+CREATE TABLE IF NOT EXISTS review_templates (
+    id TEXT NOT NULL,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    data TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    PRIMARY KEY(user_id, id)
+  );
+  CREATE TABLE IF NOT EXISTS template_groups (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(user_id, name)
+  );

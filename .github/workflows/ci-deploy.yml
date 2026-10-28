@@ -1,0 +1,80 @@
+name: Verify and deploy For Reviewer
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: for-reviewer-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17-bookworm
+        env:
+          POSTGRES_DB: reviewer_test
+          POSTGRES_USER: reviewer_admin
+          POSTGRES_PASSWORD: ci-only-admin-password
+        ports: ["5432:5432"]
+        options: --health-cmd 'pg_isready -U reviewer_admin -d reviewer_test' --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - name: Initialize isolated PostgreSQL test schema
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5432"
+          PGUSER: reviewer_admin
+          PGPASSWORD: ci-only-admin-password
+          PGDATABASE: reviewer_test
+          PGSCHEMA: reviewer
+        run: |
+          node server/migrate.mjs
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE reviewer_app LOGIN PASSWORD 'ci-only-app-password' NOSUPERUSER NOCREATEDB NOCREATEROLE;
+          REVOKE ALL ON SCHEMA public FROM PUBLIC;
+          GRANT USAGE ON SCHEMA reviewer TO reviewer_app;
+          GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA reviewer TO reviewer_app;
+          GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA reviewer TO reviewer_app;
+          SQL
+      - run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+      - run: npm run build
+      - run: npx playwright install --with-deps chrome
+      - name: Browser lifecycle and PostgreSQL regression checks
+        run: npx playwright test tests/e2e/workspace.spec.ts tests/e2e/review-kpis.spec.ts tests/e2e/kanban.spec.ts tests/e2e/calendar-processing.spec.ts tests/e2e/review-type-filter.spec.ts tests/e2e/signup-code.spec.ts
+        env:
+          DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PRODUCTION_DEPLOY_ENABLED == 'true'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build immutable application image
+        run: docker build -t "for-reviewer:${GITHUB_SHA}" .
+      - name: Deploy through project-specific restricted SSH key
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_KEY" > ~/.ssh/reviewer
+          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/reviewer ~/.ssh/known_hosts
+          trap 'rm -f ~/.ssh/reviewer' EXIT
+          docker save "for-reviewer:${GITHUB_SHA}" | gzip | ssh -i ~/.ssh/reviewer -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o BatchMode=yes "reviewer-deploy@${DEPLOY_HOST}" "deploy ${GITHUB_SHA}"

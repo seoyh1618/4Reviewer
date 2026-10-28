@@ -1,0 +1,9 @@
+[Unit]
+Description=Encrypted PostgreSQL backup for For Reviewer
+After=docker.service
+[Service]
+Type=oneshot
+ExecStart=/opt/4reviewer/bin/backup.sh
+User=root
+Nice=10
+CPUQuota=25%

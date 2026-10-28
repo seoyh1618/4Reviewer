@@ -1,0 +1,14 @@
+node_modules
+dist
+data
+test-results
+.git
+.env
+docs/screenshots
+public/ocr
+
+.env.*
+secrets
+backups
+deployment-private
+playwright-report

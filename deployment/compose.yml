@@ -1,0 +1,84 @@
+name: for-reviewer
+services:
+  postgres:
+    image: postgres:17-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: reviewer
+      POSTGRES_USER: reviewer_admin
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?required}
+      POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - 127.0.0.1:55432:5432
+    networks: [database]
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U reviewer_admin -d reviewer']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 512m
+    cpus: 0.75
+    pids_limit: 150
+    shm_size: 128m
+    logging: &logging
+      driver: json-file
+      options: {max-size: 10m, max-file: '3'}
+  app:
+    image: ${APP_IMAGE:?required}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: reviewer_app
+      PGPASSWORD: ${POSTGRES_APP_PASSWORD:?required}
+      PGDATABASE: reviewer
+      PGSCHEMA: reviewer
+      COOKIE_SECURE: 'true'
+      TRUST_PROXY: '1'
+      APP_ORIGIN: ${APP_ORIGIN:?required}
+      APP_REVISION: ${APP_REVISION:-initial}
+      SIGNUP_CODE: ${SIGNUP_CODE:?required}
+    depends_on:
+      postgres: {condition: service_healthy}
+    networks: [database, web]
+    read_only: true
+    tmpfs: [/tmp:size=32m,noexec,nosuid]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 384m
+    cpus: 0.75
+    pids_limit: 100
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:3001/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 10s
+    logging: *logging
+  proxy:
+    image: nginx:stable-alpine
+    restart: unless-stopped
+    ports:
+      - 8443:443
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./tls:/etc/nginx/tls:ro
+    depends_on:
+      app: {condition: service_healthy}
+    networks: [web]
+    read_only: true
+    tmpfs: [/var/cache/nginx:size=32m, /var/run:size=8m, /tmp:size=8m]
+    security_opt: [no-new-privileges:true]
+    mem_limit: 64m
+    cpus: 0.25
+    pids_limit: 60
+    logging: *logging
+networks:
+  database: {}
+  web: {}
+volumes:
+  postgres-data: {}

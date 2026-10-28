@@ -1,0 +1,8 @@
+[Unit]
+Description=Daily For Reviewer backup (03:15 Asia/Seoul)
+[Timer]
+OnCalendar=*-*-* 03:15:00 Asia/Seoul
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target
