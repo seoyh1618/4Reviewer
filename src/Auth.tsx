@@ -12,7 +12,12 @@ import {
 import { api } from "./lib";
 import { Button } from "./ui";
 import type { User } from "./types";
-import { usernamePattern, usernameHelp } from "../shared/auth.mjs";
+import {
+  usernamePattern,
+  usernameHelp,
+  passwordMinLength,
+  passwordHelp,
+} from "../shared/auth.mjs";
 export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
   const [signupMethod, setSignupMethod] = useState<"email" | "username">(
     "email",
@@ -165,10 +170,10 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
               <input
                 name="password"
                 type={show ? "text" : "password"}
-                placeholder={signup ? "10자 이상 입력해 주세요" : "••••••••••"}
+                placeholder={signup ? passwordHelp : "••••••••••"}
                 autoComplete={signup ? "new-password" : "current-password"}
                 required
-                minLength={signup ? 10 : 1}
+                minLength={signup ? passwordMinLength : 1}
                 maxLength={128}
               />
               <button

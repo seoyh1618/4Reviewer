@@ -84,8 +84,12 @@ test(
       await start();
       const signup = async (idOnly = false) => {
         const r = await req("/auth/signup", "POST", {
-          ...(idOnly ? { username: `pg_${randomUUID().replaceAll("-", "").slice(0, 22)}` } : { email: `pg-${randomUUID()}@example.test` }),
-          password: "Postgres-test-pass-1234",
+          ...(idOnly
+            ? {
+                username: `pg_${randomUUID().replaceAll("-", "").slice(0, 22)}`,
+              }
+            : { email: `pg-${randomUUID()}@example.test` }),
+          password: "Pass1234",
           signupCode: "pg-test-only",
         });
         assert.equal(r.status, 201);
@@ -98,10 +102,23 @@ test(
         b = await signup();
       assert.equal(a.body.user.email, null);
       assert.equal(b.body.user.username, null);
-      const byId = await req("/auth/login", "POST", { identifier: a.body.user.username.toUpperCase(), password: "Postgres-test-pass-1234" });
+      const byId = await req("/auth/login", "POST", {
+        identifier: a.body.user.username.toUpperCase(),
+        password: "Pass1234",
+      });
       assert.equal(byId.status, 200);
       assert.equal(byId.body.user.id, a.body.user.id);
-      assert.equal((await req("/auth/username", "PATCH", { username: a.body.user.username, currentPassword: "Postgres-test-pass-1234" }, b.cookie)).status, 409);
+      assert.equal(
+        (
+          await req(
+            "/auth/username",
+            "PATCH",
+            { username: a.body.user.username, currentPassword: "Pass1234" },
+            b.cookie,
+          )
+        ).status,
+        409,
+      );
       const stored = await pool.query(
         "SELECT password FROM users WHERE id=$1",
         [users[0]],

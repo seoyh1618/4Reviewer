@@ -15,7 +15,12 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { reviewSchema, normalizeReview } from "../shared/domain.mjs";
 import { registerTemplateRoutes } from "./templates.mjs";
-import { usernamePattern, usernameHelp } from "../shared/auth.mjs";
+import {
+  usernamePattern,
+  usernameHelp,
+  passwordMinLength,
+  passwordHelp,
+} from "../shared/auth.mjs";
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const db = await openDatabase();
 const hashToken = (token) => createHash("sha256").update(token).digest("hex");
@@ -131,10 +136,7 @@ const credentialSchema = z
   .object({
     email: z.string().trim().toLowerCase().pipe(z.email().max(254)).optional(),
     username: usernameSchema.optional(),
-    password: z
-      .string()
-      .min(10, "비밀번호는 10자 이상 입력해 주세요.")
-      .max(128),
+    password: z.string().min(passwordMinLength, passwordHelp).max(128),
   })
   .refine((value) => value.email || value.username, {
     message: "이메일 또는 아이디를 입력해 주세요.",
@@ -153,7 +155,9 @@ app.post("/api/auth/signup", async (req, res) => {
     return res.status(400).json({
       error: parsed.error.issues.some((issue) => issue.path[0] === "username")
         ? `아이디는 ${usernameHelp}`
-        : "이메일 또는 아이디와 10자 이상의 비밀번호를 확인해 주세요.",
+        : parsed.error.issues.some((issue) => issue.path[0] === "password")
+          ? `비밀번호는 ${passwordMinLength}~128자로 입력해 주세요.`
+          : "올바른 이메일 또는 아이디를 입력해 주세요.",
     });
   const { email = null, password, username = null } = parsed.data;
   if (

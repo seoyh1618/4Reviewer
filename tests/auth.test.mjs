@@ -106,11 +106,11 @@ test(
         cookie: response.headers.get("set-cookie")?.split(";")[0],
       };
     }
-    const signup = (email, username) =>
+    const signup = (email, username, enteredPassword = password) =>
       request("/auth/signup", "POST", {
         email,
         username,
-        password,
+        password: enteredPassword,
         signupCode: "3333",
       });
     const login = (identifier, enteredPassword = password) =>
@@ -204,19 +204,37 @@ test(
       assert.deepEqual(concurrent.map((r) => r.status).sort(), [201, 409]);
       await stop();
       await start();
-      const idOnly = await signup(undefined, "id_only_user");
+      const boundaryPassword = "Pass1234";
+      for (const identity of [
+        { email: "short@example.test" },
+        { username: "short_password_user" },
+      ]) {
+        const denied = await request("/auth/signup", "POST", {
+          ...identity,
+          password: boundaryPassword.slice(0, 7),
+          signupCode: "3333",
+        });
+        assert.equal(denied.status, 400);
+        assert.match(denied.body.error, /8~128자/);
+        assert.equal(denied.cookie, undefined);
+      }
+      const idOnly = await signup(undefined, "id_only_user", boundaryPassword);
       assert.equal(idOnly.status, 201);
       assert.equal(idOnly.body.user.email, null);
       assert.equal(
-        (await login("ID_ONLY_USER")).body.user.id,
+        (await login("ID_ONLY_USER", boundaryPassword)).body.user.id,
         idOnly.body.user.id,
       );
       assert.equal((await signup(undefined, "id_only_other")).status, 201);
-      const emailOnly = await signup("emailonly@example.test", undefined);
+      const emailOnly = await signup(
+        "emailonly@example.test",
+        undefined,
+        boundaryPassword,
+      );
       assert.equal(emailOnly.status, 201);
       assert.equal(emailOnly.body.user.username, null);
       assert.equal(
-        (await login("EMAILONLY@example.test")).body.user.id,
+        (await login("EMAILONLY@example.test", boundaryPassword)).body.user.id,
         emailOnly.body.user.id,
       );
       assert.equal((await signup(undefined, undefined)).status, 400);
