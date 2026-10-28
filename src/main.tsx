@@ -5,8 +5,11 @@ import "./styles.css";
 import "./workspace.css";
 import "./auth-mobile.css";
 import App from "./App";
+import { PwaProvider } from "./PwaInstall";
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <App />
+    <PwaProvider>
+      <App />
+    </PwaProvider>
   </React.StrictMode>,
 );

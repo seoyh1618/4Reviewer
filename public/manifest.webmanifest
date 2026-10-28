@@ -1,0 +1,27 @@
+{
+  "id": "/",
+  "name": "포 리뷰어 (For Reviewer)",
+  "short_name": "포 리뷰어",
+  "description": "리뷰 관리, 정산 관리.",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f9fc",
+  "theme_color": "#ffffff",
+  "categories": ["productivity", "business"],
+  "icons": [
+    {
+      "src": "/icons/app-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/app-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

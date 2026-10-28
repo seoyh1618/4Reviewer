@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Auth from "./Auth";
 import UsernameForm from "./UsernameForm";
+import { PwaInstallButton } from "./PwaInstall";
 import Dashboard from "./Dashboard";
 import Products from "./Products";
 import Calendar from "./Calendar";
@@ -452,6 +453,7 @@ export default function App() {
               주문내역 가져오기 <ArrowUpRight size={14} />
             </button>
           </div>
+          <PwaInstallButton navigation />
           <button
             className="nav-item"
             aria-label="사용 가이드"
@@ -702,6 +704,7 @@ export default function App() {
                 <dd>대한민국 원 (KRW)</dd>
               </div>
             </dl>
+            <PwaInstallButton />
             <Button onClick={() => exportCsv(items)}>내 데이터 내보내기</Button>
           </div>
           <div className="modal-footer">
