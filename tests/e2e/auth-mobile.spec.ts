@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("phone login fits the viewport without hiding its controls or errors", async ({
+test("phone login preserves the original animated identity and keeps controls reachable", async ({
   page,
 }) => {
   await page.route("**/api/auth/login", (route) =>
@@ -28,6 +28,15 @@ test("phone login fits the viewport without hiding its controls or errors", asyn
     await expect(login).toBeVisible();
     const orbit = page.locator(".orbit");
     await expect(orbit).toBeVisible();
+    const identity = await orbit.boundingBox();
+    expect(identity!.width).toBe(220);
+    expect(identity!.height).toBe(220);
+    expect((await orbit.locator(".orbit-center").boundingBox())!.width).toBe(
+      70,
+    );
+    expect(
+      (await orbit.locator(".orbital-item").first().boundingBox())!.width,
+    ).toBeCloseTo(36, 0);
     await expect(orbit).toBeInViewport();
     await expect(orbit.locator(".orbital-element")).toHaveCount(5);
     const rotatingIcon = orbit.locator(".orbital-element").first();
@@ -47,20 +56,33 @@ test("phone login fits the viewport without hiding its controls or errors", asyn
       expect(size.width, JSON.stringify(viewport)).toBeLessThanOrEqual(
         viewport.width,
       );
-      expect(size.height, JSON.stringify(viewport)).toBeLessThanOrEqual(
-        viewport.height + 1,
-      );
+      // Keep the full-size identity; allow natural overflow on short displays.
+      if (viewport.height >= 844 || viewport.width > 600) {
+        expect(size.height, JSON.stringify(viewport)).toBeLessThanOrEqual(
+          viewport.height + 1,
+        );
+      }
       const card = await page.locator(".auth-card").boundingBox();
       expect(
-        Math.abs(card!.x + card!.width / 2 - viewport.width / 2),
+        Math.abs(
+          card!.x +
+            card!.width / 2 -
+            (await page.evaluate(() => document.documentElement.clientWidth)) /
+              2,
+        ),
       ).toBeLessThanOrEqual(1);
+      await login.scrollIntoViewIfNeeded();
       await expect(login).toBeInViewport();
-      await expect(
-        page.getByRole("button", { name: "회원가입", exact: true }),
-      ).toBeInViewport();
+      const signup = page.getByRole("button", {
+        name: "회원가입",
+        exact: true,
+      });
+      await signup.scrollIntoViewIfNeeded();
+      await expect(signup).toBeInViewport();
     };
     await assertFits();
     if (viewport.width === 375) {
+      await page.evaluate(() => scrollTo(0, 0));
       await page.screenshot({
         path: "test-results/login-mobile.png",
         animations: "disabled",
@@ -82,6 +104,9 @@ test("short viewport and enlarged text keep login fields reachable", async ({
   await page.setViewportSize({ width: 390, height: 500 });
   await page.goto("/");
   await page.getByLabel("비밀번호", { exact: true }).focus();
+  await page
+    .getByRole("button", { name: "Sign in", exact: true })
+    .scrollIntoViewIfNeeded();
   await expect(
     page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeInViewport();

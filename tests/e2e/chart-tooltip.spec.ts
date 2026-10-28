@@ -148,6 +148,7 @@ test.describe("touch chart", () => {
       await page.setViewportSize(viewport);
       await page.goto("/");
       const months = chart(page).getByRole("button");
+      await expect(page.locator(".sync-status")).toContainText("마지막 동기화");
       await chart(page).scrollIntoViewIfNeeded();
       for (const index of [0, 4, 5]) {
         const month = months.nth(index);
