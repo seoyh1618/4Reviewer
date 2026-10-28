@@ -3,6 +3,18 @@ services:
   postgres:
     image: postgres:17-bookworm
     restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - ssl=on
+      - -c
+      - ssl_cert_file=/etc/postgresql/tls/server.crt
+      - -c
+      - ssl_key_file=/etc/postgresql/tls/server.key
+      - -c
+      - ssl_min_protocol_version=TLSv1.2
+      - -c
+      - hba_file=/etc/postgresql/pg_hba.conf
     environment:
       POSTGRES_DB: reviewer
       POSTGRES_USER: reviewer_admin
@@ -10,8 +22,10 @@ services:
       POSTGRES_INITDB_ARGS: --auth-host=scram-sha-256
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./postgres/tls:/etc/postgresql/tls:ro
+      - ./postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
     ports:
-      - 127.0.0.1:55432:5432
+      - 0.0.0.0:55432:5432
     networks: [database]
     healthcheck:
       test: [CMD-SHELL, 'pg_isready -U reviewer_admin -d reviewer']

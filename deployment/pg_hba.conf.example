@@ -1,0 +1,9 @@
+# Replace BOTH placeholders with the verified dedicated Docker network and
+# the approved administrator public IPv4 address. Never use 0.0.0.0/0 for either.
+# Install as /opt/4reviewer/postgres/pg_hba.conf before starting PostgreSQL.
+local all reviewer_admin trust
+local all all reject
+host reviewer,reviewer_test reviewer_admin,reviewer_app REPLACE_DOCKER_DB_SUBNET scram-sha-256
+hostssl reviewer reviewer_dbeaver REPLACE_ADMIN_IPV4/32 scram-sha-256
+host all all 0.0.0.0/0 reject
+host all all ::/0 reject

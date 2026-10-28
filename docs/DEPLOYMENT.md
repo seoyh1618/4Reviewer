@@ -7,7 +7,7 @@
 - Compose 프로젝트: `for-reviewer`
 - 웹 접속: `https://43.202.80.103:8443`
 - 앱: 외부 포트 없이 전용 네트워크의 `app:3001`
-- PostgreSQL 17: 전용 컨테이너·볼륨·계정·DB·스키마. 관리 포트는 서버의 `127.0.0.1:55432`에만 연결
+- PostgreSQL 17: 전용 컨테이너·볼륨·계정·DB·스키마. DBeaver 직접 접속용 `55432`는 허용한 관리 PC의 IPv4 주소에만 개방하고 TLS 인증서 검증을 필수로 사용
 - 게임 프로젝트의 컨테이너·DB·볼륨·배포 Runner·80/443/8081 포트는 변경하지 않음
 - 같은 VM의 OS·물리 자원은 공유한다. 앱·DB·프록시에 메모리/CPU 한도를 설정했으며, VM 관리자 권한까지 분리되는 별도 서버 구성은 아니다.
 
@@ -21,23 +21,29 @@
 
 | 항목 | 값 |
 |---|---|
-| 서버 | 43.202.80.103 (SSH 진입점) |
-| host | 127.0.0.1 (SSH 터널 개설 후) |
-| port | 15432 (로컬 터널), 55432 (서버 관리 포트), 5432 (컨테이너 내부) |
-| user | reviewer_app |
+| host | 43.202.80.103 |
+| port | 55432 (DBeaver 직접 접속), 5432 (컨테이너 내부) |
+| user | reviewer_dbeaver |
 | name | reviewer |
 | schema | reviewer |
 | password | 별도 전달한 비공개 접속 문서 |
+| SSL | verify-full, 전달한 DB 전용 ca.crt 지정 |
 
-```sh
-ssh -i ~/Desktop/AWS/keys/yut_43_202_80_103.pem \
-  -o IdentitiesOnly=yes -o ExitOnForwardFailure=yes \
-  -N -L 127.0.0.1:15432:127.0.0.1:55432 ubuntu@43.202.80.103
-```
+DBeaver에서 PostgreSQL 연결을 만들고 위 값을 입력한다. SSH 설정은 사용하지 않는다. SSL 탭에서 Use SSL을 켜고 `verify-full`과 별도 전달한 `ca.crt`를 선택한다. 드라이버 속성으로 설정할 때는 `sslmode=verify-full`, `sslrootcert=ca.crt의 절대 경로`를 사용한다. 클라이언트 인증서나 개인 키는 지정하지 않는다. 기본 스키마는 계정에 `reviewer,pg_catalog`로 설정했다.
 
-DBeaver에서 SSH 터널을 자체 설정하는 경우 SSH host=43.202.80.103, user=ubuntu, port=22, 위 키를 지정한다. DB host=127.0.0.1, port=55432로 연결한다. PostgreSQL 5432/55432는 Lightsail 방화벽에서 공개하지 않는다.
+Lightsail 방화벽에는 TCP 55432를 **승인된 관리 PC의 공인 IPv4 /32만** 허용한다. PostgreSQL의 `/opt/4reviewer/postgres/pg_hba.conf`에서도 같은 IP의 `reviewer_dbeaver` 계정에만 TLS 연결을 허용한다. 관리 PC의 공인 IP가 바뀌면 두 곳의 허용 주소를 함께 갱신하고 이전 주소를 제거해야 한다. IPv6 DB 공개 규칙은 추가하지 않는다. `5432`는 외부에 노출하지 않는다.
 
-앱 계정은 스키마 사용, 테이블 조회/등록/수정/삭제와 시퀀스 사용만 가능하다. DB·역할·테이블 생성 권한은 없다. DDL 마이그레이션과 복원은 별도 `reviewer_admin` 관리자 계정으로 수행한다. 비밀번호와 운영 파일은 GitHub에 저장하지 않는다.
+앱 계정 `reviewer_app`과 외부 관리 계정 `reviewer_dbeaver`는 비밀번호를 공유하지 않는다. 두 계정은 스키마 사용, 테이블 조회/등록/수정/삭제와 시퀀스 사용만 가능하며 DB·역할·테이블 생성 권한은 없다. DBeaver 계정은 운영 데이터를 조회·수정할 수 있는 소유자용 계정으로 일반 사용자에게 배포하지 않는다. DDL 마이그레이션과 복원은 SSH로 서버에 접속한 뒤 별도 `reviewer_admin` 관리자 계정으로 수행한다. 앱/관리자 역할의 직접 외부 접속은 HBA에서 거부한다. 비밀번호와 운영 파일은 GitHub에 저장하지 않는다.
+
+### DB TLS와 접속 규칙 관리
+
+- 운영 HBA는 `deployment/pg_hba.conf.example`을 참고해 실제 Docker DB 네트워크와 허용 IP를 지정한다. 현재 DB 네트워크는 `172.19.0.0/16`이며, 재구성 시 `docker network inspect for-reviewer_database`로 다시 확인한다. 예시 파일은 미치환 상태로 배포하지 않는다.
+- Compose 기동 전 `/opt/4reviewer/postgres/tls/server.crt`, `server.key`, `/opt/4reviewer/postgres/pg_hba.conf`가 있어야 한다. 인증서에는 접속 IP의 SAN이 필요하다. CA 개인 키는 소유자 비공개 로컬 폴더에만 보관하고 서버/GitHub에 올리지 않는다.
+- PostgreSQL 컨테이너의 postgres GID를 확인해 TLS 폴더는 root:해당 GID, 0750, 서버 키는 같은 소유권과 0640, 서버 인증서/HBA는 0644로 설치한다. 키를 전체 읽기 가능하게 만들지 않는다.
+- DB 서버 인증서는 1년 유효하며 2027-10-28 이전에 갱신해야 한다. 자동 갱신은 아직 설정하지 않았다. 동일 CA로 새 서버 인증서를 발급해 키·인증서를 교체하고 `SELECT pg_reload_conf()`를 실행한 뒤 새로운 연결에서 `verify-full` 성공을 확인한다. HBA 변경도 reload 후 `pg_hba_file_rules` 오류와 실제 연결을 확인한다.
+- DB 덤프에는 클러스터 역할, HBA, TLS 파일이 포함되지 않는다. 새 서버 복구 시 별도 비공개 접속 정보를 사용해 관리자/앱/DBeaver 역할 및 기본 권한을 먼저 재구성하고, TLS/HBA 파일과 방화벽 규칙을 복원한다.
+
+연결 설정 참고: [DBeaver SSL 설정](https://dbeaver.com/docs/dbeaver/SSL-Configuration/), [PostgreSQL TLS 설정](https://www.postgresql.org/docs/17/ssl-tcp.html).
 
 ## 저장 구조
 
