@@ -16,6 +16,8 @@ test("phone login fits the viewport without hiding its controls or errors", asyn
     { width: 320, height: 568 },
     { width: 360, height: 640 },
     { width: 375, height: 667 },
+    { width: 390, height: 701 },
+    { width: 390, height: 740 },
     { width: 390, height: 844 },
     { width: 430, height: 932 },
     { width: 844, height: 390 },
@@ -24,6 +26,19 @@ test("phone login fits the viewport without hiding its controls or errors", asyn
     await page.goto("/");
     const login = page.getByRole("button", { name: "Sign in", exact: true });
     await expect(login).toBeVisible();
+    const orbit = page.locator(".orbit");
+    await expect(orbit).toBeVisible();
+    await expect(orbit).toBeInViewport();
+    await expect(orbit.locator(".orbital-element")).toHaveCount(5);
+    const rotatingIcon = orbit.locator(".orbital-element").first();
+    const transform = await rotatingIcon.evaluate(
+      (element) => getComputedStyle(element).transform,
+    );
+    await expect
+      .poll(() =>
+        rotatingIcon.evaluate((element) => getComputedStyle(element).transform),
+      )
+      .not.toBe(transform);
     const assertFits = async () => {
       const size = await page.evaluate(() => ({
         width: document.documentElement.scrollWidth,

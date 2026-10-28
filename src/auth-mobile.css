@@ -4,7 +4,7 @@ html:has(.auth-page) {
   scrollbar-gutter: auto;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 600px), (max-width: 950px) and (max-height: 500px) {
   .auth-page {
     min-height: 100svh;
     padding: max(12px, env(safe-area-inset-top))
@@ -33,7 +33,8 @@ html:has(.auth-page) {
   }
 
   .orbit {
-    --orbit-size: clamp(100px, calc(100svh - 590px), 164px);
+    --orbit-size: clamp(80px, calc(100svh - 590px), 164px);
+    --orbit-radius: calc(var(--orbit-size) * 0.36);
     width: var(--orbit-size);
     height: var(--orbit-size);
     margin-bottom: 20px;
@@ -55,8 +56,13 @@ html:has(.auth-page) {
   }
 
   .orbit-center {
-    width: 52px;
-    height: 52px;
+    width: clamp(32px, calc(var(--orbit-size) * 0.36), 52px);
+    height: clamp(32px, calc(var(--orbit-size) * 0.36), 52px);
+  }
+
+  .orbit-center svg {
+    width: clamp(22px, calc(var(--orbit-size) * 0.25), 34px);
+    height: clamp(22px, calc(var(--orbit-size) * 0.25), 34px);
   }
 
   .orbital-element {
@@ -64,8 +70,13 @@ html:has(.auth-page) {
   }
 
   .orbital-item {
-    width: 30px;
-    height: 30px;
+    width: clamp(20px, calc(var(--orbit-size) * 0.22), 30px);
+    height: clamp(20px, calc(var(--orbit-size) * 0.22), 30px);
+  }
+
+  .orbital-item svg {
+    width: clamp(12px, calc(var(--orbit-size) * 0.14), 18px);
+    height: clamp(12px, calc(var(--orbit-size) * 0.14), 18px);
   }
 
   .auth-form {
@@ -115,7 +126,8 @@ html:has(.auth-page) {
   }
 
   .auth-card:has(.signup-methods) .orbit {
-    display: none;
+    --orbit-size: 72px;
+    margin-bottom: 12px;
   }
 }
 
@@ -131,19 +143,73 @@ html:has(.auth-page) {
 
 @media (max-width: 600px) and (max-height: 700px) {
   .auth-page {
-    gap: 8px;
+    gap: 6px;
   }
 
   .auth-card {
-    padding: 16px 20px;
+    padding: 12px 18px;
   }
 
   .auth-heading {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
-  .auth-page .orbit {
+  .auth-heading h1 {
+    font-size: 32px;
+    margin-bottom: 4px;
+  }
+
+  .auth-heading p {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  .orbit {
+    --orbit-size: clamp(80px, calc(100svh - 555px), 120px);
+    margin-bottom: 12px;
+  }
+
+  .auth-form {
+    gap: 8px;
+  }
+
+  .auth-form label {
+    gap: 6px;
+  }
+
+  .username-field label {
+    margin-bottom: 6px;
+  }
+
+  .auth-form input {
+    min-height: 44px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+
+  .auth-form .checkbox-label {
+    min-height: 28px;
+  }
+
+  .auth-form .checkbox-label input {
+    min-height: 18px;
+    padding: 0;
+  }
+
+  .auth-form .auth-submit {
+    min-height: 44px;
+  }
+
+  .auth-switch {
+    margin-top: 4px;
+  }
+
+  .auth-note {
     display: none;
+  }
+
+  .auth-footer {
+    line-height: 1.3;
   }
 }
 
@@ -173,6 +239,21 @@ html:has(.auth-page) {
   .auth-card:not(:has(.signup-methods)) {
     max-width: 650px;
     padding: 16px 24px;
+    display: grid;
+    grid-template-columns: 110px minmax(0, 1fr);
+    column-gap: 18px;
+  }
+
+  .auth-card:not(:has(.signup-methods)) > .orbit {
+    --orbit-size: 100px;
+    grid-column: 1;
+    grid-row: 1 / 4;
+    align-self: center;
+    margin-bottom: 0;
+  }
+
+  .auth-card:not(:has(.signup-methods)) > :not(.orbit) {
+    grid-column: 2;
   }
 
   .auth-heading {
@@ -188,7 +269,6 @@ html:has(.auth-page) {
     font-size: 13px;
   }
 
-  .auth-page .orbit,
   .auth-note {
     display: none;
   }

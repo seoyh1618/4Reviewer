@@ -74,7 +74,7 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
                 key={i}
                 style={{
                   animationDelay: `${-i * 4}s`,
-                  transform: `rotate(${i * 72}deg) translateX(80px) rotate(${-i * 72}deg)`,
+                  transform: `rotate(${i * 72}deg) translateX(var(--orbit-radius, 80px)) rotate(${-i * 72}deg)`,
                 }}
               >
                 <div className="orbital-item">
