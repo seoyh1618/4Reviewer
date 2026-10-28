@@ -429,6 +429,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-right: 12px;
   width: 34px;
   height: 34px;
   border: 1px solid #dbeafe;
@@ -554,6 +555,9 @@
 .metric-focus {
   border-color: #cddffb;
 }
+.metric-card {
+  container-type: inline-size;
+}
 .metric-focus .metric-value,
 .metric-focus .metric-detail {
   color: var(--slds-g-color-on-surface-1);
@@ -620,6 +624,9 @@
 }
 .bar-chart .bar-group:focus-visible {
   outline-offset: 0;
+}
+.recent-panel .table-wrap {
+  position: relative;
 }
 .table-wrap[tabindex]:focus-visible {
   outline: 2px solid #2563eb;

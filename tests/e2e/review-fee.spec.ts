@@ -156,7 +156,7 @@ test("additional review fee: review entry, payment adjustment, pending filters, 
   await nav.getByRole("button", { name: "대시보드", exact: true }).click();
   await expect(metric("받을 페이백")).toHaveText("33,000원");
   await expect(metric("누적 구매금액")).toHaveText("30,000원");
-  await expect(metric("입금 완료")).toHaveText("0원");
+  await expect(metric("정산 금액")).toHaveText("0원");
   await nav.getByRole("button", { name: /^내 리뷰/ }).click();
   await steps
     .getByRole("button", { name: "정산 완료 전환", exact: true })
@@ -182,7 +182,7 @@ test("additional review fee: review entry, payment adjustment, pending filters, 
   await expect(dialog).toBeHidden();
   await nav.getByRole("button", { name: "대시보드", exact: true }).click();
   await expect(metric("받을 페이백")).toHaveText("4,000원");
-  await expect(metric("입금 완료")).toHaveText("30,000원");
+  await expect(metric("정산 금액")).toHaveText("30,000원");
   await nav.getByRole("button", { name: /^페이백/ }).click();
   await page.getByRole("tab", { name: "입금 대기", exact: true }).click();
   const table = page.getByRole("region", { name: "페이백 목록", exact: true });
@@ -204,7 +204,7 @@ test("additional review fee: review entry, payment adjustment, pending filters, 
     .getByRole("dialog")
     .getByRole("group", { name: "추가 리뷰비 텀블러 진행 단계" });
   await mobileSteps
-    .getByRole("button", { name: "정산 완료 전환", exact: true })
+    .getByRole("button", { name: "정산 완료", exact: true })
     .click();
   await expect(dialog.getByLabel("이번 입금액", { exact: true })).toHaveValue(
     "4000",
@@ -241,14 +241,27 @@ test("additional review fee: review entry, payment adjustment, pending filters, 
     .getByRole("navigation", { name: "모바일 메뉴" })
     .getByRole("button", { name: "통계", exact: true })
     .click();
-  await expect(metric("누적 구매금액")).toHaveText("30,000원");
-  await expect(metric("입금 완료")).toHaveText("34,000원");
-  await expect(metric("받을 페이백")).toHaveText("0원");
+  const composition = page.getByRole("region", {
+    name: "수익 구성",
+    exact: true,
+  });
+  await expect(
+    composition.locator(".analysis-income-context dd").last(),
+  ).toHaveText("34,000원");
+  await expect(composition.locator(".analysis-income-total strong")).toHaveText(
+    "4,000원",
+  );
+  await page.locator(".analysis-detail summary").click();
+  await expect(
+    page.locator("tbody tr").first().getByRole("cell").nth(3),
+  ).toHaveText("30,000원");
   await expect(
     page.locator("tbody tr").first().getByRole("cell").nth(4),
   ).toHaveText("34,000원");
   await page.reload();
-  await expect(metric("입금 완료")).toHaveText("34,000원");
+  await expect(
+    composition.locator(".analysis-income-context dd").last(),
+  ).toHaveText("34,000원");
 });
 
 test("additional review fee: fee-only mobile settlement, save retry and paid amount protection", async ({

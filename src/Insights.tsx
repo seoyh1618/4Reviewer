@@ -1,10 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Download, ChartColumnIncreasing } from "lucide-react";
-import { MonthlyChart, Metrics } from "./Dashboard";
-import { Button, SectionTitle, Platform, Empty, PageHeading } from "./ui";
+import { Button, SectionTitle, PageHeading } from "./ui";
 import { won, monthlyData, exportCsv } from "./lib";
-import { platformLabel, today } from "../shared/domain.mjs";
+import { today } from "../shared/domain.mjs";
 import type { Review, Payment } from "./types";
+import OrderTrend from "./OrderTrend";
+import ReviewActivity from "./ReviewActivity";
+import { ReviewDonut, IncomeBars, PlatformBars } from "./InsightCharts";
+import "./insights.css";
+import { earningsByMonth, earningsSummary } from "../shared/earnings.mjs";
 
 type Period = { year: string; month: string };
 function readPeriod(): Period {
@@ -57,6 +61,7 @@ export default function Insights({
     new Set([
       today().slice(0, 4),
       ...items.map((r) => r.purchaseDate.slice(0, 4)),
+      ...items.filter((r) => r.reviewedAt).map((r) => r.reviewedAt.slice(0, 4)),
       ...payments.map((p) => p.paidAt.slice(0, 4)),
       ...(period.year ? [period.year] : []),
     ]),
@@ -80,13 +85,19 @@ export default function Insights({
         )
     : undefined;
   const monthly = monthlyData(filteredItems, filteredPayments, months);
-  const platformData = Array.from(new Set(filteredItems.map(platformLabel)))
-    .map((p) => ({
-      name: p,
-      rows: filteredItems.filter((i) => platformLabel(i) === p),
-    }))
-    .filter((x) => x.rows.length)
-    .sort((a, b) => b.rows.length - a.rows.length);
+  const incomeMonths = useMemo(
+    () => earningsByMonth(items, payments),
+    [items, payments],
+  );
+  const earnings = earningsSummary(filteredItems);
+  if (prefix) {
+    // Cash income follows deposit dates, including purchases in earlier periods.
+    earnings.cashReceived = 0;
+    for (const [key, income] of incomeMonths) {
+      if (key.startsWith(prefix)) earnings.cashReceived += income.cashReceived;
+    }
+    earnings.total = earnings.cashReceived + earnings.productValue;
+  }
   return (
     <>
       <div className="page-title insights-title">
@@ -144,76 +155,46 @@ export default function Insights({
       <p className="insight-period-summary" role="status">
         <strong>{periodLabel}</strong>
         <span>
-          구매·리뷰는 구매일 기준의 현재 상태, 실제 입금액은 입금일 기준이에요.
+          주문은 구매일, 리뷰 활동은 작성일, 정산 금액은 입금일 기준이에요.
         </span>
       </p>
-      <Metrics
-        items={filteredItems}
-        period={{
-          label: periodLabel,
-          received: filteredPayments.reduce((sum, p) => sum + p.amount, 0),
-        }}
-      />
-      <div className="dashboard-panels">
-        <section className="panel">
+      <div className="analysis-grid">
+        <section className="panel analysis-panel">
           <SectionTitle
-            title="구매와 페이백 추이"
-            note={`${period.year ? periodLabel : "최근 6개월"} · 구매일과 입금일 기준`}
+            title="주문금액 추이"
+            note={`${period.year ? periodLabel : "최근 6개월"} · 구매일 기준`}
           />
-          <MonthlyChart
+          <OrderTrend
             key={prefix}
             items={filteredItems}
-            payments={filteredPayments}
-            data={monthly}
+            months={months}
+            initialMode={period.month ? "day" : "month"}
           />
         </section>
-        <section className="panel">
+        <ReviewDonut items={filteredItems} />
+        <section className="panel analysis-panel analysis-activity-panel">
           <SectionTitle
-            title="플랫폼별 활동"
-            note={`${periodLabel} · 구매 상품 수 기준`}
+            title="리뷰 활동"
+            note={`${period.year ? periodLabel : "최근 6개월"} · 리뷰 작성일 기준`}
           />
-          <div className="platform-stats">
-            {platformData.length ? (
-              platformData.map((p) => (
-                <div key={p.name}>
-                  <div className="flex-between">
-                    <Platform name={p.name} />
-                    <b>
-                      {p.rows.length}
-                      <small>
-                        건 ·{" "}
-                        {Math.round(
-                          (p.rows.length / filteredItems.length) * 100,
-                        )}
-                        %
-                      </small>
-                    </b>
-                  </div>
-                  <progress value={p.rows.length} max={filteredItems.length} />
-                </div>
-              ))
-            ) : (
-              <Empty
-                title={
-                  period.year
-                    ? "선택한 기간에 구매한 상품이 없어요"
-                    : "아직 기록이 없어요"
-                }
-                description={
-                  period.year
-                    ? "다른 연도나 월을 선택해 보세요."
-                    : "상품을 등록하면 통계가 쌓여요."
-                }
-              />
-            )}
-          </div>
+          <ReviewActivity
+            key={prefix}
+            items={items}
+            months={months}
+            initialMode={period.month ? "day" : "month"}
+          />
         </section>
-      </div>
-      <section className="panel">
-        <SectionTitle
-          title="월별 상세 내역"
-          note="구매 건수·리뷰 완료는 구매월 기준, 입금액은 입금월 기준"
+        <IncomeBars
+          summary={earnings}
+          received={filteredPayments.reduce((sum, p) => sum + p.amount, 0)}
         />
+        <PlatformBars items={filteredItems} />
+      </div>
+      <details className="panel analysis-detail">
+        <summary>월별 상세 내역</summary>
+        <p className="analysis-detail-note">
+          구매·리뷰·상품 수익은 구매월 기준, 정산 금액·현금 수익은 입금월 기준
+        </p>
         <div
           className="table-wrap"
           role="region"
@@ -226,8 +207,11 @@ export default function Insights({
                 <th>기간</th>
                 <th>구매 건수</th>
                 <th>리뷰 완료</th>
-                <th>구매금액</th>
-                <th>실제 입금액</th>
+                <th>주문금액</th>
+                <th>정산 금액</th>
+                <th>현금 수익</th>
+                <th>상품 수익</th>
+                <th>총수익</th>
               </tr>
             </thead>
             <tbody>
@@ -238,15 +222,26 @@ export default function Insights({
                   <td>{d.reviews}건</td>
                   <td className="money-cell">{won(d.purchase)}원</td>
                   <td className="money-cell brand-text">{won(d.received)}원</td>
+                  <td className="money-cell">
+                    {won(incomeMonths.get(d.key)?.cashReceived ?? 0)}원
+                  </td>
+                  <td className="money-cell">
+                    {won(incomeMonths.get(d.key)?.productValue ?? 0)}원
+                  </td>
+                  <td className="money-cell">
+                    <strong>
+                      {won(incomeMonths.get(d.key)?.total ?? 0)}원
+                    </strong>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </section>
+      </details>
       <p className="insight-note">
-        페이백은 구매대금의 환급을 포함하므로 수익과 같지 않습니다. 이 통계는
-        직접 등록한 기록을 기준으로 계산됩니다.
+        총수익은 입금된 추가 리뷰비와 실배송 상품가액의 합계입니다. 상품값
+        환급은 수익에 포함하지 않으며, 상품 수익은 현금이 아닌 상품 가치입니다.
       </p>
     </>
   );

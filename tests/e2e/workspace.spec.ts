@@ -1050,7 +1050,7 @@ test("guided review to settlement updates dashboard, monthly statistics and paym
   async function checkMetrics(todo: string, pending: string, received: string) {
     await expect(metric("작성해야 할 리뷰")).toHaveText(todo);
     await expect(metric("받을 페이백")).toHaveText(pending);
-    await expect(metric("입금 완료")).toHaveText(received);
+    await expect(metric("정산 금액")).toHaveText(received);
   }
   await checkMetrics("1건", "30,000원", "0원");
   await nav.getByRole("button", { name: /^내 리뷰/ }).click();
@@ -1109,6 +1109,7 @@ test("guided review to settlement updates dashboard, monthly statistics and paym
   await nav.getByRole("button", { name: "대시보드", exact: true }).click();
   await checkMetrics("0건", "30,000원", "0원");
   await nav.getByRole("button", { name: "통계", exact: true }).click();
+  await page.locator(".analysis-detail summary").click();
   const monthRow = () =>
     page
       .locator("tbody tr")
@@ -1139,6 +1140,7 @@ test("guided review to settlement updates dashboard, monthly statistics and paym
   await nav.getByRole("button", { name: "대시보드", exact: true }).click();
   await checkMetrics("0건", "20,000원", "10,000원");
   await nav.getByRole("button", { name: "통계", exact: true }).click();
+  await page.locator(".analysis-detail summary").click();
   await expect(monthRow().getByRole("cell").nth(4)).toHaveText("10,000원");
   await nav.getByRole("button", { name: /^내 리뷰/ }).click();
   await page.getByRole("tab", { name: "리뷰 완료", exact: true }).click();
@@ -1183,10 +1185,17 @@ test("guided review to settlement updates dashboard, monthly statistics and paym
     animations: "disabled",
   });
   await nav.getByRole("button", { name: "통계", exact: true }).click();
+  await page.locator(".analysis-detail summary").click();
   await expect(monthRow().getByRole("cell").nth(2)).toHaveText("1건");
   await expect(monthRow().getByRole("cell").nth(4)).toHaveText("30,000원");
   await page.reload();
-  await checkMetrics("0건", "0원", "30,000원");
+  await expect(
+    page
+      .getByRole("region", { name: "수익 구성", exact: true })
+      .locator(".analysis-income-context dd")
+      .last(),
+  ).toHaveText("30,000원");
+  await page.locator(".analysis-detail summary").click();
   await expect(monthRow().getByRole("cell").nth(4)).toHaveText("30,000원");
 });
 

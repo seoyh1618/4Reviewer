@@ -199,6 +199,7 @@ export function reviewOverview(items) {
     (summary, item) => {
       const parts = remainingPaybackParts(item);
       const pending = item.reviewStatus === "todo";
+      const completed = item.reviewStatus === "done";
       summary.settled += Number(settlement(item) === "done");
       summary.todoPhysical += Number(
         pending && item.shippingMethod === "실배송",
@@ -206,6 +207,15 @@ export function reviewOverview(items) {
       summary.todoEmpty += Number(pending && item.shippingMethod === "빈박스");
       summary.todoUnspecified += Number(
         pending && !shippingMethods.includes(item.shippingMethod),
+      );
+      summary.donePhysical += Number(
+        completed && item.shippingMethod === "실배송",
+      );
+      summary.doneEmpty += Number(
+        completed && item.shippingMethod === "빈박스",
+      );
+      summary.doneUnspecified += Number(
+        completed && !shippingMethods.includes(item.shippingMethod),
       );
       summary.pendingProduct += parts.product;
       summary.pendingReviewFee += parts.reviewFee;
@@ -218,6 +228,9 @@ export function reviewOverview(items) {
       todoPhysical: 0,
       todoEmpty: 0,
       todoUnspecified: 0,
+      donePhysical: 0,
+      doneEmpty: 0,
+      doneUnspecified: 0,
       pendingProduct: 0,
       pendingReviewFee: 0,
       partial: 0,

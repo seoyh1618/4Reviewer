@@ -43,6 +43,10 @@
 * {
   box-sizing: border-box;
 }
+html {
+  /* Keep centered headings aligned when a shorter page needs no scrollbar. */
+  scrollbar-gutter: stable;
+}
 body {
   margin: 0;
 }

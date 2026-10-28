@@ -34,6 +34,8 @@ import {
   PageHeading,
 } from "./ui";
 import type { Review, Payment, Page } from "./types";
+import { earningsSummary } from "../shared/earnings.mjs";
+import Earnings from "./Earnings";
 export function Metrics({
   items,
   period,
@@ -61,7 +63,7 @@ export function Metrics({
       tone: "orange",
     },
     {
-      label: "입금 완료",
+      label: "정산 금액",
       value: period?.received ?? t.received,
       unit: "원",
       detail: period
@@ -95,7 +97,16 @@ export function Metrics({
               <c.Icon size={18} />
             </span>
           </div>
-          <div className="metric-value">
+          <div
+            className="metric-value"
+            style={
+              won(c.value).length > 9
+                ? {
+                    fontSize: `min(22px, calc((100cqw - 22px) / ${won(c.value).length * 0.63}))`,
+                  }
+                : undefined
+            }
+          >
             {won(c.value)}
             <small>{c.unit}</small>
           </div>
@@ -324,6 +335,7 @@ export default function Dashboard({
         </div>
       </div>
       <Metrics items={items} />
+      <Earnings summary={earningsSummary(items)} />
       <button
         className="attention-banner"
         onClick={() => onNavigate("products", "urgent")}

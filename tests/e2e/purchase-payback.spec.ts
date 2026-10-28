@@ -46,7 +46,7 @@ test("shipping payback: empty box includes product price, real delivery is fee-o
   await expect(dialog).toBeHidden();
   await expect(metric("누적 구매금액")).toHaveText("200,000원");
   await expect(metric("받을 페이백")).toHaveText("200,000원");
-  await expect(metric("입금 완료")).toHaveText("0원");
+  await expect(metric("정산 금액")).toHaveText("0원");
   await page.screenshot({
     path: "docs/screenshots/shipping-payback-dashboard.png",
     fullPage: true,
@@ -97,7 +97,7 @@ test("shipping payback: empty box includes product price, real delivery is fee-o
     .click();
   await expect(metric("누적 구매금액")).toHaveText("200,000원");
   await expect(metric("받을 페이백")).toHaveText("153,000원");
-  await expect(metric("입금 완료")).toHaveText("50,000원");
+  await expect(metric("정산 금액")).toHaveText("50,000원");
   await page.reload();
   await expect(metric("받을 페이백")).toHaveText("153,000원");
   await page
@@ -116,7 +116,7 @@ test("shipping payback: empty box includes product price, real delivery is fee-o
     .last()
     .click();
   await expect(metric("받을 페이백")).toHaveText("0원");
-  await expect(metric("입금 완료")).toHaveText("203,000원");
+  await expect(metric("정산 금액")).toHaveText("203,000원");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page

@@ -92,6 +92,10 @@ test("review overview distinguishes paid, zero settlement and pending review typ
     todoPhysical: 1,
     todoEmpty: 2,
     todoUnspecified: 1,
+    donePhysical: 2,
+    doneEmpty: 1,
+    doneUnspecified: 0,
+    received: 30600,
     pending: 13400,
     pendingProduct: 6800,
     pendingReviewFee: 6600,
@@ -100,5 +104,16 @@ test("review overview distinguishes paid, zero settlement and pending review typ
     assert.equal(result[key], value, key);
   assert.equal(result.pendingProduct + result.pendingReviewFee, result.pending);
   assert.deepEqual(items, before);
+  const withLegacyDone = reviewOverview([
+    ...items,
+    { ...items[4], reviewStatus: "done" },
+  ]);
+  assert.equal(withLegacyDone.doneUnspecified, 1);
+  assert.equal(
+    withLegacyDone.donePhysical +
+      withLegacyDone.doneEmpty +
+      withLegacyDone.doneUnspecified,
+    withLegacyDone.done,
+  );
   assert(Object.values(reviewOverview([])).every((value) => value === 0));
 });

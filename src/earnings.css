@@ -1,0 +1,114 @@
+.earnings-section {
+  margin: 0 0 24px;
+}
+.earnings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.earnings-card {
+  container-type: inline-size;
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+}
+.earnings-card:first-child {
+  border-color: #cddffb;
+}
+.earnings-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.earnings-card h3 {
+  margin: 0;
+  font-size: 12px;
+  color: #526078;
+  font-weight: 500;
+}
+.earnings-card .metric-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+}
+.earnings-value {
+  font-size: clamp(24px, 2.1vw, 32px);
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  color: #1f2937;
+  margin: 10px 0 8px;
+  overflow-wrap: anywhere;
+}
+.earnings-value small {
+  font-size: 12px;
+  margin-left: 5px;
+  color: #526078;
+  font-weight: 400;
+}
+.earnings-note {
+  margin: 0;
+  font-size: 11px;
+  color: #526078;
+  line-height: 1.6;
+}
+.earnings-detail {
+  border-top: 1px solid #edf0f5;
+  padding-top: 10px;
+  margin: 12px 0 0;
+  font-size: 11px;
+  color: #526078;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.earnings-basis {
+  color: #526078;
+  font-size: 11px;
+  line-height: 1.8;
+  margin: 10px 0 0;
+}
+@media (max-width: 1250px) {
+  .earnings-grid {
+    gap: 12px;
+  }
+  .earnings-card {
+    padding: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .earnings-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .earnings-card {
+    padding: 16px 14px;
+  }
+  .earnings-card-top {
+    gap: 6px;
+  }
+  .earnings-card h3 {
+    font-size: 10px;
+  }
+  .earnings-card .metric-icon {
+    width: 27px;
+    height: 27px;
+  }
+  .earnings-value {
+    margin: 11px 0 8px;
+    font-size: 25px;
+    min-width: 0;
+  }
+  .earnings-note {
+    margin-top: 4px;
+    font-size: 10px;
+  }
+  .earnings-detail {
+    margin-top: 6px;
+    padding-top: 8px;
+    font-size: 10px;
+  }
+}

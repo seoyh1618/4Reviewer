@@ -79,10 +79,17 @@ test("review KPIs split review types and receivables and reflect partial/full se
   });
   const values = kpis.locator(".review-kpi-value");
   const types = kpis.getByLabel("작성 전 리뷰 타입별 건수", { exact: true });
+  const completedTypes = kpis.getByLabel("완료한 리뷰 타입별 건수", {
+    exact: true,
+  });
+  const received = kpis.getByLabel("누적 정산금액", { exact: true });
   const parts = kpis.getByLabel("받을 페이백 구성", { exact: true });
   await expect(values).toHaveText(["7건", "2건", "3건", "4건", "19,500원"]);
   await expect(types).toContainText("실배송 1건");
   await expect(types).toContainText("빈박스 2건");
+  await expect(completedTypes).toContainText("실배송 2건");
+  await expect(completedTypes).toContainText("빈박스 2건");
+  await expect(received).toHaveText("정산금액 30,500원");
   await expect(parts).toContainText("상품 원가 12,000원");
   await expect(parts).toContainText("리뷰비 7,500원");
   await expect(kpis).toContainText("부분 입금은 상품 원가부터 차감");
@@ -133,6 +140,9 @@ test("review KPIs split review types and receivables and reflect partial/full se
   await page.setViewportSize({ width: 360, height: 844 });
   await page.getByLabel("리뷰 타입 필터").selectOption("실배송");
   await expect(values).toHaveText(["3건", "0건", "1건", "2건", "3,500원"]);
+  await expect(completedTypes).toContainText("실배송 2건");
+  await expect(completedTypes).toContainText("빈박스 0건");
+  await expect(received).toHaveText("정산금액 500원");
   await expect(parts).toContainText("상품 원가 0원");
   await expect(parts).toContainText("리뷰비 3,500원");
   await page.getByLabel("플랫폼 필터").selectOption("네이버");
@@ -141,6 +151,9 @@ test("review KPIs split review types and receivables and reflect partial/full se
   await expect(values).toHaveText(["1건", "0건", "1건", "0건", "2,000원"]);
   await page.getByLabel("상품 검색").fill("없는 리뷰");
   await expect(values).toHaveText(["0건", "0건", "0건", "0건", "0원"]);
+  await expect(completedTypes).toContainText("실배송 0건");
+  await expect(completedTypes).toContainText("빈박스 0건");
+  await expect(received).toHaveText("정산금액 0원");
   await expect(parts).toContainText("상품 원가 0원");
   await expect(parts).toContainText("리뷰비 0원");
   await page.getByRole("button", { name: "필터 초기화", exact: true }).click();
@@ -180,6 +193,7 @@ test("review KPIs split review types and receivables and reflect partial/full se
     .getByRole("button", { name: "닫기", exact: true })
     .click();
   await expect(values).toHaveText(["1건", "0건", "0건", "1건", "4,000원"]);
+  await expect(received).toHaveText("정산금액 3,000원");
   await expect(parts).toContainText("상품 원가 3,000원");
   await expect(parts).toContainText("리뷰비 1,000원");
   await page.locator(".mobile-product").click();
@@ -192,6 +206,7 @@ test("review KPIs split review types and receivables and reflect partial/full se
     .getByRole("button", { name: "닫기", exact: true })
     .click();
   await expect(values).toHaveText(["1건", "1건", "0건", "1건", "0원"]);
+  await expect(received).toHaveText("정산금액 7,000원");
   await expect(parts).toContainText("상품 원가 0원");
   await expect(parts).toContainText("리뷰비 0원");
   await page.getByLabel("상품 검색").fill("");
@@ -211,6 +226,9 @@ test("review KPIs split review types and receivables and reflect partial/full se
   await page.getByLabel("상품 검색").fill("");
   await page.reload();
   await expect(values).toHaveText(["7건", "3건", "2건", "5건", "12,500원"]);
+  await expect(completedTypes).toContainText("실배송 2건");
+  await expect(completedTypes).toContainText("빈박스 3건");
+  await expect(received).toHaveText("정산금액 37,500원");
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "내보내기", exact: true }).click();
   const csv = await readFile((await (await downloadPromise).path())!, "utf8");

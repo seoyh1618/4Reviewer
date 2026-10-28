@@ -108,20 +108,6 @@ test("monthly chart: mouse, keyboard, zero values, exact amounts and live refres
   await expect(tooltip(page)).toBeVisible();
   await months.last().click();
   await expect(tooltip(page)).toHaveCount(0);
-  await page
-    .getByRole("navigation", { name: "메인 메뉴" })
-    .getByRole("button", { name: "통계", exact: true })
-    .click();
-  await chart(page).getByRole("button").last().hover();
-  await expect(tooltip(page).locator("dd")).toHaveText([
-    "27,900원",
-    "57,900원",
-  ]);
-  const monthRow = page
-    .locator("tbody tr")
-    .filter({ hasText: monthLabel(thisMonth) });
-  await expect(monthRow.getByRole("cell").nth(3)).toHaveText("27,900원");
-  await expect(monthRow.getByRole("cell").nth(4)).toHaveText("57,900원");
   expect(
     (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
       .violations,
@@ -160,7 +146,7 @@ test.describe("touch chart", () => {
       { width: 844, height: 390 },
     ]) {
       await page.setViewportSize(viewport);
-      await page.goto("/?view=insights");
+      await page.goto("/");
       const months = chart(page).getByRole("button");
       await chart(page).scrollIntoViewIfNeeded();
       for (const index of [0, 4, 5]) {

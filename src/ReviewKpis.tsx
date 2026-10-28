@@ -30,7 +30,8 @@ export default function ReviewKpis({
       <p className="sr-only" id={id}>
         검색어, 플랫폼, 리뷰 타입에 해당하는 전체 리뷰 기준입니다. 상태 탭과
         페이지를 바꿔도 집계 범위는 유지됩니다. 정산 완료는 실제 입금이 완료된
-        건수입니다. 부분 입금은 상품 원가부터 차감합니다.
+        건수입니다. 정산금액은 부분 입금을 포함해 실제로 받은 누적 금액입니다.
+        부분 입금은 상품 원가부터 차감합니다.
       </p>
       <div className="review-kpi-card">
         <dl className="review-kpi-pair">
@@ -43,6 +44,15 @@ export default function ReviewKpis({
             <Value value={summary.settled} />
           </div>
         </dl>
+        <div
+          className="review-kpi-detail"
+          aria-label="누적 정산금액"
+          title="부분 입금을 포함해 실제로 받은 누적 금액입니다."
+        >
+          <span>
+            정산금액 <b>{won(summary.received)}</b>원
+          </span>
+        </div>
         {filtered && <p className="review-kpi-note">검색·필터 적용</p>}
       </div>
       <div className="review-kpi-card">
@@ -72,6 +82,19 @@ export default function ReviewKpis({
           <dt>리뷰 완료</dt>
           <Value value={summary.done} />
         </dl>
+        <div className="review-kpi-detail" aria-label="완료한 리뷰 타입별 건수">
+          <span>
+            실배송 <b>{won(summary.donePhysical)}</b>건
+          </span>
+          <span>
+            빈박스 <b>{won(summary.doneEmpty)}</b>건
+          </span>
+          {summary.doneUnspecified > 0 && (
+            <span>
+              미지정 <b>{won(summary.doneUnspecified)}</b>건
+            </span>
+          )}
+        </div>
       </div>
       <div className="review-kpi-card review-kpi-payback">
         <dl>
