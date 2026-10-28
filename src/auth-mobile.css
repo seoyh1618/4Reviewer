@@ -1,5 +1,9 @@
 /* Let decoration yield to the form on small phone screens. Keep natural
    overflow available for zoom, validation messages and the software keyboard. */
+html:has(.auth-page) {
+  scrollbar-gutter: auto;
+}
+
 @media (max-width: 600px) {
   .auth-page {
     min-height: 100svh;

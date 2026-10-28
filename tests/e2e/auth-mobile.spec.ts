@@ -35,6 +35,10 @@ test("phone login fits the viewport without hiding its controls or errors", asyn
       expect(size.height, JSON.stringify(viewport)).toBeLessThanOrEqual(
         viewport.height + 1,
       );
+      const card = await page.locator(".auth-card").boundingBox();
+      expect(
+        Math.abs(card!.x + card!.width / 2 - viewport.width / 2),
+      ).toBeLessThanOrEqual(1);
       await expect(login).toBeInViewport();
       await expect(
         page.getByRole("button", { name: "회원가입", exact: true }),
