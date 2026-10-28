@@ -5,17 +5,33 @@
 - 저장소: https://github.com/seoyh1618/4Reviewer — main 브랜치
 - 운영 디렉터리: `/opt/4reviewer`
 - Compose 프로젝트: `for-reviewer`
-- 웹 접속: `https://43.202.80.103:8443`
+- 웹 접속: https://forreviwer.com — https://www.forreviwer.com 은 대표 주소로 이동
 - 앱: 외부 포트 없이 전용 네트워크의 `app:3001`
 - PostgreSQL 17: 전용 컨테이너·볼륨·계정·DB·스키마. DBeaver 직접 접속용 `55432`는 허용한 관리 PC의 IPv4 주소에만 개방하고 TLS 인증서 검증을 필수로 사용
-- 게임 프로젝트의 컨테이너·DB·볼륨·배포 Runner·80/443/8081 포트는 변경하지 않음
+- 게임 앱·DB·Redis·미리보기·배포 Runner는 분리 유지. 80/443을 담당하는 기존 Caddy 진입점만 공유하며, 도메인별로 서로 다른 앱으로 전달한다. 게임 앱과 DB를 재배포하지 않는다.
 - 같은 VM의 OS·물리 자원은 공유한다. 앱·DB·프록시에 메모리/CPU 한도를 설정했으며, VM 관리자 권한까지 분리되는 별도 서버 구성은 아니다.
 
-## HTTPS 현재 상태
+## 도메인과 HTTPS
 
-도메인 연결 전 임시 IP 인증서를 사용한다. TLS 암호화와 Secure 쿠키는 활성화하지만 **공인 CA 인증서가 아니므로 브라우저 경고가 발생한다. 일반 사용자 공개 전 도메인과 공인 인증서를 적용해야 한다.** HTTP로 비밀번호나 개인정보를 입력하는 운영 방식은 제공하지 않는다.
+2026-10-28 가비아 DNS에 다음 레코드를 저장했다. 등록한 도메인의 정확한 철자는 `forreviwer.com`이다.
 
-도메인을 확보하면 A 레코드를 서버 IP로 연결하고 DNS 검증으로 인증서를 발급할 수 있다. 기존 게임이 사용하는 80/443 포트를 공유하지 않으려면 `https://도메인:8443`을 유지한다. 인증서 파일은 `/opt/4reviewer/tls/fullchain.pem`, `privkey.pem`이며 프록시만 다시 읽으면 된다. `.env`의 `APP_ORIGIN`도 정확한 HTTPS 주소로 변경하고 앱을 재생성한다. 인증서 자동 갱신과 만료 알림도 함께 설정한다. 게임 프록시를 중단해 인증서를 발급하지 않는다.
+| 유형 | 호스트 | 값 | TTL |
+|---|---|---|---|
+| A | @ | 43.202.80.103 | 600 |
+| A | www | 43.202.80.103 | 600 |
+
+Caddy가 두 호스트의 Let's Encrypt 공인 인증서를 발급하고 자동 갱신한다. HTTP는 HTTPS로, www는 대표 주소 `https://forreviwer.com`으로 이동한다. `.env`의 `APP_ORIGIN`은 대표 주소와 정확히 같아야 하며, 변경 시 For Reviewer 앱만 재생성한다. 로그인은 Secure/HttpOnly 쿠키와 Origin 검사를 사용한다.
+
+연결 경로: 공통 Caddy 443 → Docker 호스트의 사설 주소 `172.18.0.1:18081` → For Reviewer nginx 8080 → 전용 네트워크의 app 3001. `18081`은 사설 브리지 주소에만 바인딩하며 Lightsail 방화벽에 개방하지 않는다. 앱·DB 네트워크를 게임 네트워크와 합치지 않는다. 브리지 재생성 시 실제 게이트웨이를 확인하고 Compose와 Caddy upstream을 함께 변경한다.
+
+- 이 저장소의 `deployment/for-reviewer.caddy`가 도메인 연결 설정의 원본이다.
+- 운영 파일은 `yutnori-production_caddy-config` 볼륨의 `/config/for-reviewer/for-reviewer.caddy`에 설치한다. 호스트 위치는 `docker volume inspect`로 확인한다.
+- 공통 Caddyfile `/opt/yutnori/docker/proxy/Caddyfile`은 `import /config/for-reviewer/*.caddy` 한 줄로 위 파일을 불러온다. 이 import는 [게임 저장소 커밋](https://github.com/seoyh1618/Yut-API-Master/commit/71f80904c4f220d203c1c12d46db2c9254d43ab8)에도 반영해 다음 게임 배포 시 유지된다. 해당 커밋은 `[skip ci]`로 게임 앱 재배포를 실행하지 않았다.
+- 인증서·갱신 정보는 기존 `yutnori-production_caddy-data` 볼륨에 보존된다. 공통 진입점 볼륨을 삭제하면 두 프로젝트의 접속에 영향을 줄 수 있다.
+- 현재 Caddy 2.10.2는 `admin off`로 실행된다. 변경 전 별도 제안 파일을 `caddy validate`로 검증한 뒤 **Caddy 컨테이너만** 재시작한다. 게임의 전체 Compose 재기동을 하지 않는다. 파일 바인드가 이전 inode를 가리킬 수 있으므로 재시작 후 컨테이너 안의 실제 설정과 각 서비스 응답도 확인한다.
+- 기존 `https://43.202.80.103:8443`은 임시 IP 인증서의 유지보수 경로로 남아 있다. 일반 사용자에게는 공인 인증서가 적용된 도메인 주소를 안내한다. 기존 IP 주소는 운영 로그인 Origin이 아니다.
+
+도메인 등록 연장(가비아)과 HTTPS 인증서 자동 갱신(Caddy)은 별개다. 자동 갱신을 위해 DNS가 서버를 가리키고 80/443이 열려 있어야 한다. 웹 인증서 설정은 아래 DBeaver용 DB 인증서와 별개다.
 
 ## DB 접속
 
@@ -84,12 +100,15 @@ sudo cat /opt/4reviewer/deployed-revision
 sudo systemctl status 4reviewer-backup.timer
 ```
 
-`/api/health`는 DB 연결과 배포 커밋을 반환한다. 비밀값은 반환하지 않는다. 초기 임시 인증서 확인은 서버에서 다음과 같이 신뢰할 인증서 파일을 직접 지정한다.
+`/api/health`는 DB 연결과 배포 커밋을 반환한다. 비밀값은 반환하지 않는다.
 
 ```sh
-sudo curl --cacert /opt/4reviewer/tls/fullchain.pem \
-  https://43.202.80.103:8443/api/health
+curl --fail https://forreviwer.com/api/health
+curl --head https://www.forreviwer.com/
+curl --fail http://43.202.80.103/health/ready
 ```
+
+운영 변경 전 `/opt/4reviewer`의 Compose·nginx·환경 파일과 공통 Caddyfile을 비공개 백업한다. 문제가 있으면 직전 설정으로 복구하고 변경한 컨테이너만 재기동한다. 도메인 연결 작업의 백업은 `/opt/4reviewer/backups/domain-20261028T091316Z`에 있다.
 
 ## 백업과 복구
 

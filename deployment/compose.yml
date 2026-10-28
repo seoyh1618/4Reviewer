@@ -78,6 +78,9 @@ services:
     restart: unless-stopped
     ports:
       - 8443:443
+      # Shared HTTPS ingress reaches this port through the host's Docker bridge.
+      # This address is private and is never added to the Lightsail firewall.
+      - 172.18.0.1:18081:8080
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - ./tls:/etc/nginx/tls:ro
