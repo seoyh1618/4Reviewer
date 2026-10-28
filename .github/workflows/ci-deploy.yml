@@ -47,10 +47,12 @@ jobs:
           GRANT USAGE ON SCHEMA reviewer TO reviewer_app;
           GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA reviewer TO reviewer_app;
           GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA reviewer TO reviewer_app;
+          REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON reviewer.review_history,reviewer.payment_history FROM reviewer_app;
           SQL
       - run: npm test
         env:
           TEST_DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+          TEST_DATABASE_ADMIN_URL: postgresql://reviewer_admin:ci-only-admin-password@127.0.0.1:5432/reviewer_test
       - run: npm run build
       - run: npx playwright install --with-deps chrome
       - name: Browser lifecycle and PostgreSQL regression checks

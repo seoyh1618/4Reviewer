@@ -7,6 +7,9 @@ try {
   await client.query("SELECT pg_advisory_xact_lock(44001234)");
   const schema = schemaName();
   await client.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  await client.query(
+    `SET LOCAL search_path = "${schema}", pg_catalog, pg_temp`,
+  );
   const existing = await client.query(
     "SELECT to_regclass('schema_migrations') AS name",
   );
@@ -28,8 +31,18 @@ try {
         "utf8",
       ),
     );
+  const history = await client.query(
+    "SELECT version FROM schema_migrations WHERE version=3",
+  );
+  if (!history.rowCount)
+    await client.query(
+      await readFile(
+        new URL("./migrations/003-review-history.sql", import.meta.url),
+        "utf8",
+      ),
+    );
   await client.query("COMMIT");
-  console.log("Database schema ready: version 2");
+  console.log("Database schema ready: version 3");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;
