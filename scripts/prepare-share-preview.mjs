@@ -1,69 +1,45 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
-import { createElement } from "react";
-import { renderToStaticMarkup } from "react-dom/server";
-import {
-  Fingerprint,
-  ShoppingBag,
-  Star,
-  Camera,
-  Wallet,
-  ClipboardCheck,
-} from "lucide-react";
+import { readFile, writeFile } from "node:fs/promises";
 
-// Render the existing login identity without modifying the live login UI.
-// Serve the repository root locally, open this HTML at 1200 x 630, then save
-// its JPEG screenshot to public/social/login-orbit-v1.jpg. No account data is used.
-const styles = await readFile(
-  new URL("../src/styles.css", import.meta.url),
+// Run npm run build first, then serve dist with an isolated local app instance.
+// Open /share-preview.html at 1200 x 630 and save its JPEG screenshot as
+// public/social/login-screen-v2.jpg. The iframe renders the actual anonymous
+// login UI at 375 x 667, with empty fields. No runtime login styles are changed.
+const index = await readFile(
+  new URL("../dist/index.html", import.meta.url),
   "utf8",
 );
-const orbitStyles = styles.match(/\.orbit \{[\s\S]*?(?=@keyframes orbit)/)?.[0];
-if (!orbitStyles) throw new Error("Login orbit styles could not be found.");
-const icon = (Component, size, props = {}) =>
-  renderToStaticMarkup(createElement(Component, { size, ...props }));
-const orbit = `<div class="orbit" aria-hidden="true">
-  <div class="orbit-circle orbit-1"></div>
-  <div class="orbit-circle orbit-2"></div>
-  <div class="orbit-circle orbit-3"></div>
-  <div class="orbit-center">${icon(Fingerprint, 34, { strokeWidth: 1.7 })}</div>
-  ${[ShoppingBag, Star, Camera, Wallet, ClipboardCheck]
-    .map(
-      (
-        Component,
-        i,
-      ) => `<div class="orbital-element" style="transform: rotate(${i * 72}deg) translateX(80px) rotate(${-i * 72}deg)">
-        <div class="orbital-item">${icon(Component, 18)}</div>
-      </div>`,
-    )
-    .join("\n")}
-</div>`;
+const stylesheet = index.match(/<link[^>]*rel="stylesheet"[^>]*>/)?.[0];
+if (!stylesheet) throw new Error("Build the app before preparing the preview.");
 const html = `<!doctype html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex">
-  <title>For Reviewer share image preview</title>
-  <link rel="stylesheet" href="/src/assets/fonts/pretendard/pretendardvariable-dynamic-subset.css">
+  <title>For Reviewer login share preview</title>
+  ${stylesheet}
   <style>
-    * { box-sizing: border-box; }
-    html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #fff; }
-    main { width: 1200px; height: 630px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; }
-    ${orbitStyles}
-    .identity { width: 396px; height: 396px; }
-    .orbit { margin: 0; transform: scale(1.8); transform-origin: top left; }
-    .orbital-element { animation: none; }
-    h1 { margin: 0; font: 600 44px/1.2 "Pretendard Variable", sans-serif; letter-spacing: -1px; color: #202735; }
+    html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; scrollbar-gutter: auto; background: #f5f7fa; }
+    .share-scene { width: 1200px; height: 630px; display: grid; grid-template-columns: 1fr 400px; align-items: center; gap: 50px; padding: 0 86px; }
+    .share-copy h1 { margin: 0; font: 650 58px/1.15 "Pretendard Variable", sans-serif; letter-spacing: -2px; color: #202735; }
+    .share-copy p { margin: 22px 0 0; font-size: 25px; line-height: 1.5; color: #526078; }
+    .preview-browser { width: 309.5px; justify-self: center; overflow: hidden; border: 1px solid #dfe5ec; border-radius: 14px; background: #fff; box-shadow: 0 20px 45px #25354a12; }
+    .preview-toolbar { height: 28px; display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #e8edf2; color: #718096; font-size: 10px; letter-spacing: .1px; }
+    .preview-viewport { width: 307.5px; height: 546.94px; overflow: hidden; }
+    .preview-viewport iframe { display: block; width: 375px; height: 667px; border: 0; transform: scale(.82); transform-origin: top left; }
   </style>
 </head>
-<body><main><div class="identity">${orbit}</div><h1>For Reviewer</h1></main></body>
+<body>
+  <main class="share-scene">
+    <div class="share-copy"><h1>For Reviewer</h1><p>리뷰 관리, 정산 관리.</p></div>
+    <div class="preview-browser">
+      <div class="preview-toolbar">forreviwer.com</div>
+      <div class="preview-viewport"><iframe src="/" title="포 리뷰어 로그인 첫 화면"></iframe></div>
+    </div>
+  </main>
+</body>
 </html>`;
-const output = new URL(
-  "../docs/screenshots/share-preview.html",
-  import.meta.url,
-);
-await mkdir(new URL(".", output), { recursive: true });
-await writeFile(output, html);
+await writeFile(new URL("../dist/share-preview.html", import.meta.url), html);
 console.log(
-  "Share preview prepared: docs/screenshots/share-preview.html (1200 x 630)",
+  "Login screenshot preview prepared: /share-preview.html (1200 x 630)",
 );
