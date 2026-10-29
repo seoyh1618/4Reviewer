@@ -38,13 +38,10 @@ test.describe("mobile review form and sorting", () => {
     await dialog.getByLabel("리뷰 마감일", { exact: true }).fill("");
     await dialog.getByLabel("구매금액").fill("999999999");
     await dialog.getByLabel("리뷰비", { exact: true }).fill("1");
-    await dialog
-      .getByRole("button", { name: "추가 관리 정보 · SKU, 주문번호" })
-      .click();
-    await dialog
-      .getByLabel("주문번호", { exact: true })
-      .fill("ORDER".repeat(20));
-    await dialog.getByLabel("SKU", { exact: true }).fill("SKU".repeat(25));
+    for (const name of ["SKU", "주문번호", "연락처"]) {
+      await expect(dialog.getByLabel(name, { exact: true })).toHaveCount(0);
+    }
+    await expect(dialog.locator(".advanced-toggle")).toHaveCount(0);
     // Reject an unsupported upload without starting OCR; the error must wrap as well.
     await page.getByLabel("주문내역 이미지 업로드").setInputFiles({
       name: "invalid.txt",
@@ -91,6 +88,19 @@ test.describe("mobile review form and sorting", () => {
           }),
         );
       expect(fields.every((r) => r.x >= 0 && r.right <= width + 1)).toBe(true);
+      if (width <= 600) {
+        const reference = (await dialog
+          .getByLabel("판매처", { exact: true })
+          .boundingBox())!;
+        for (const name of ["구매일", "리뷰 마감일"]) {
+          const frame = (await dialog
+            .getByLabel(name)
+            .locator("..")
+            .boundingBox())!;
+          expect(Math.abs(frame.x - reference.x)).toBeLessThan(1);
+          expect(Math.abs(frame.width - reference.width)).toBeLessThan(1);
+        }
+      }
       for (const select of await dialog.locator("select").all()) {
         expect((await select.boundingBox())!.height).toBeGreaterThanOrEqual(44);
       }
@@ -136,6 +146,17 @@ test.describe("mobile review form and sorting", () => {
       dialog.getByRole("heading", { name: "상품 정보 수정" }),
     ).toBeVisible();
     await page.setViewportSize({ width: 320, height: 568 });
+    for (const name of ["SKU", "주문번호", "연락처"]) {
+      await expect(dialog.getByLabel(name, { exact: true })).toHaveCount(0);
+    }
+    const reference = (await dialog
+      .getByLabel("판매처", { exact: true })
+      .boundingBox())!;
+    for (const frame of await dialog.locator(".date-field").all()) {
+      const bounds = (await frame.boundingBox())!;
+      expect(Math.abs(bounds.x - reference.x)).toBeLessThan(1);
+      expect(Math.abs(bounds.width - reference.width)).toBeLessThan(1);
+    }
     await dialog.getByLabel("정산일", { exact: true }).focus();
     expect(
       await dialog

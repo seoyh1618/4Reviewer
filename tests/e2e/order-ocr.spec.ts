@@ -87,12 +87,10 @@ for (const mobile of [false, true]) {
     await expect(dialog.getByLabel("구매일", { exact: false })).toHaveValue(
       "2026-10-28",
     );
-    await expect(dialog.getByLabel("주문번호", { exact: true })).toHaveValue(
-      "1234567890123",
-    );
+    await expect(dialog.getByLabel("주문번호", { exact: true })).toHaveCount(0);
     await expect(dialog.getByLabel("판매처", { exact: true })).toHaveValue("");
     await expect(dialog.getByLabel("계정주", { exact: false })).toHaveValue("");
-    await expect(dialog.getByLabel("연락처", { exact: true })).toHaveValue("");
+    await expect(dialog.getByLabel("연락처", { exact: true })).toHaveCount(0);
     await expect(dialog.getByLabel("리뷰비", { exact: true })).toHaveValue(
       "1500",
     );

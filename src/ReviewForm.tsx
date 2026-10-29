@@ -1,11 +1,17 @@
-import { useState, useRef, useEffect, useId, type FormEvent } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useId,
+  type FormEvent,
+  type ComponentProps,
+} from "react";
 import {
   ScanLine,
   UploadCloud,
   CheckCircle2,
   ShieldCheck,
   ImagePlus,
-  ChevronDown,
   LoaderCircle,
 } from "lucide-react";
 import { recognizeOrderImage } from "./ocr";
@@ -22,6 +28,14 @@ import {
 import { emptyReview, won } from "./lib";
 import { Modal, Button, PaybackBadge } from "./ui";
 import type { Review, ReviewInput } from "./types";
+
+function DateField(props: Omit<ComponentProps<"input">, "type">) {
+  return (
+    <span className={`date-field${props.disabled ? " is-disabled" : ""}`}>
+      <input {...props} type="date" />
+    </span>
+  );
+}
 
 export default function ReviewForm({
   item,
@@ -44,8 +58,7 @@ export default function ReviewForm({
     [ocrText, setOcrText] = useState(""),
     [ocrError, setOcrError] = useState(""),
     [preview, setPreview] = useState(""),
-    [applied, setApplied] = useState(false),
-    [expanded, setExpanded] = useState(!!item);
+    [applied, setApplied] = useState(false);
   const ocrRun = useRef<AbortController | null>(null),
     input = useRef<HTMLInputElement>(null),
     generation = useRef(0);
@@ -129,7 +142,6 @@ export default function ReviewForm({
       return;
     }
     setData((d) => normalizePayback({ ...d, ...parsed }) as ReviewInput);
-    if (parsed.orderNumber) setExpanded(true);
     setApplied(true);
     setOcrError("");
   }
@@ -379,8 +391,7 @@ export default function ReviewForm({
             </label>
             <label>
               구매일 <em>*</em>
-              <input
-                type="date"
+              <DateField
                 required
                 value={data.purchaseDate}
                 onChange={(e) => update("purchaseDate", e.target.value)}
@@ -464,10 +475,9 @@ export default function ReviewForm({
             </label>
             <label>
               리뷰 마감일
-              <input
+              <DateField
                 aria-label="리뷰 마감일"
                 aria-describedby={dueDateHelpId}
-                type="date"
                 value={data.dueDate}
                 onChange={(e) => update("dueDate", e.target.value)}
               />
@@ -497,8 +507,7 @@ export default function ReviewForm({
                 </label>
                 <label>
                   리뷰 작성일
-                  <input
-                    type="date"
+                  <DateField
                     value={data.reviewedAt}
                     disabled={data.reviewStatus !== "done"}
                     onChange={(e) => update("reviewedAt", e.target.value)}
@@ -582,8 +591,7 @@ export default function ReviewForm({
                 </label>
                 <label>
                   정산일
-                  <input
-                    type="date"
+                  <DateField
                     value={data.paidAt}
                     required={data.receivedAmount > 0}
                     onChange={(e) => update("paidAt", e.target.value)}
@@ -615,19 +623,10 @@ export default function ReviewForm({
           )}
           <div className="form-section-heading">
             <span>{item ? "04" : "03"}</span>
-            <h3>연락처와 메모</h3>
+            <h3>카톡 이름과 메모</h3>
           </div>
           <div className="form-grid">
-            <label>
-              연락처
-              <input
-                maxLength={100}
-                placeholder="담당자 연락처 또는 연락용 ID"
-                value={data.contact}
-                onChange={(e) => update("contact", e.target.value)}
-              />
-            </label>
-            <label>
+            <label className="span-2">
               카톡 이름
               <input
                 aria-label="카톡 이름"
@@ -643,36 +642,6 @@ export default function ReviewForm({
               </small>
             </label>
           </div>
-          <button
-            type="button"
-            className="advanced-toggle"
-            aria-expanded={expanded}
-            onClick={() => setExpanded(!expanded)}
-          >
-            <span>추가 관리 정보 · SKU, 주문번호</span>
-            <ChevronDown size={17} className={expanded ? "rotate" : ""} />
-          </button>
-          {expanded && (
-            <div className="form-grid advanced-fields">
-              <label>
-                SKU
-                <input
-                  maxLength={80}
-                  placeholder="나만의 관리 코드"
-                  value={data.sku}
-                  onChange={(e) => update("sku", e.target.value)}
-                />
-              </label>
-              <label>
-                주문번호
-                <input
-                  maxLength={100}
-                  value={data.orderNumber}
-                  onChange={(e) => update("orderNumber", e.target.value)}
-                />
-              </label>
-            </div>
-          )}
           <label className="memo-label">
             메모
             <textarea

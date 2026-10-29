@@ -655,7 +655,9 @@ test("spreadsheet fields persist through registration, editing, table, mobile de
   await expect(
     dialog.getByLabel("리뷰 마감일", { exact: true }),
   ).not.toHaveAttribute("required");
-  await dialog.getByLabel("연락처", { exact: true }).fill("review_contact");
+  for (const name of ["SKU", "주문번호", "연락처"]) {
+    await expect(dialog.getByLabel(name, { exact: true })).toHaveCount(0);
+  }
   await dialog.getByLabel("카톡 이름", { exact: true }).fill("리뷰 담당자");
   await expect(
     dialog.getByLabel("카톡 이름", { exact: true }),
@@ -684,9 +686,23 @@ test("spreadsheet fields persist through registration, editing, table, mobile de
     depositor: "",
     expectedPayback: 30000,
     kakaoName: "리뷰 담당자",
-    contact: "review_contact",
+    contact: "",
   });
   expect(created.payments).toHaveLength(0);
+  // Older records retain hidden metadata when users edit the simplified form.
+  const legacy = await page.request.put(
+    `/api/reviews/${created.reviews[0].id}`,
+    {
+      data: {
+        ...created.reviews[0],
+        contact: "review_contact",
+        sku: "LEGACY-SKU",
+        orderNumber: "LEGACY-ORDER",
+      },
+    },
+  );
+  expect(legacy.status()).toBe(200);
+  await page.reload();
   await page
     .getByRole("button", { name: /엑셀 항목 검증 상품/ })
     .first()
@@ -726,6 +742,8 @@ test("spreadsheet fields persist through registration, editing, table, mobile de
     reviewedAt: "2026-10-26",
     dueDate: "2026-10-27",
     contact: "review_contact",
+    sku: "LEGACY-SKU",
+    orderNumber: "LEGACY-ORDER",
     kakaoName: "리뷰 담당자",
     depositor: "테스트 입금자",
     receivedAmount: 12000,
