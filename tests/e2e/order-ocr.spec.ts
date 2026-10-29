@@ -149,33 +149,47 @@ for (const mobile of [false, true]) {
   });
 }
 
-test("OCR load errors are readable, and the same image can be retried after an error or cancellation", async ({
-  page,
-}) => {
-  await openForm(page);
-  const dialog = page.getByRole("dialog");
-  const file = await orderImage(page);
-  await page.route("**/ocr/worker.min.js", (route) => route.abort());
-  await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "주문내역을 읽지 못했습니다. 연결 상태를 확인하고 이미지를 다시 올려 주세요.",
-    { timeout: 15000 },
-  );
-  await expect(dialog.getByLabel("상품명")).toHaveValue("");
-  await page.unroute("**/ocr/worker.min.js");
-  await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
-  await dialog.getByRole("button", { name: "인식 취소", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toContainText("인식을 취소했습니다");
-  await dialog.getByLabel("상품명").fill("직접 입력한 상품");
-  await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
-  await expect(dialog.getByRole("status")).toContainText(
-    "찾은 정보를 채웠어요",
-    { timeout: 100000 },
-  );
-  await expect(dialog.getByLabel("상품명")).toHaveValue(
-    "데일리 두피 마사지기, 블루, 1세트",
-  );
-  await expect(dialog.getByRole("alert")).toHaveCount(0);
+test.describe("OCR failure recovery", () => {
+  // A controlling service worker bypasses Playwright request interception.
+  // Block it only for this failure-injection case; other OCR tests use the PWA.
+  test.use({ serviceWorkers: "block" });
+  test("OCR load errors are readable, and the same image can be retried after an error or cancellation", async ({
+    page,
+  }) => {
+    await openForm(page);
+    const dialog = page.getByRole("dialog");
+    const file = await orderImage(page);
+    let blockedRequests = 0;
+    await page.route("**/ocr/worker.min.js", (route) => {
+      blockedRequests++;
+      return route.abort();
+    });
+    await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
+    await expect.poll(() => blockedRequests).toBeGreaterThan(0);
+    await expect(dialog.getByRole("alert")).toHaveText(
+      "주문내역을 읽지 못했습니다. 연결 상태를 확인하고 이미지를 다시 올려 주세요.",
+      { timeout: 15000 },
+    );
+    await expect(dialog.getByLabel("상품명")).toHaveValue("");
+    await page.unroute("**/ocr/worker.min.js");
+    await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
+    await dialog
+      .getByRole("button", { name: "인식 취소", exact: true })
+      .click();
+    await expect(dialog.getByRole("alert")).toContainText(
+      "인식을 취소했습니다",
+    );
+    await dialog.getByLabel("상품명").fill("직접 입력한 상품");
+    await dialog.getByLabel("주문내역 이미지 업로드").setInputFiles(file);
+    await expect(dialog.getByRole("status")).toContainText(
+      "찾은 정보를 채웠어요",
+      { timeout: 100000 },
+    );
+    await expect(dialog.getByLabel("상품명")).toHaveValue(
+      "데일리 두피 마사지기, 블루, 1세트",
+    );
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+  });
 });
 
 test("HTML is not cached and missing OCR/assets return 404 instead of app HTML", async ({
