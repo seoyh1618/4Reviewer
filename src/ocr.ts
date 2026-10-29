@@ -44,6 +44,7 @@ export async function recognizeOrderImages(
   },
 ) {
   let worker: Worker | undefined,
+    workerUrl: string | undefined,
     finished = false,
     imageIndex = 0,
     tileIndex = 0,
@@ -73,8 +74,27 @@ export async function recognizeOrderImages(
       failed,
       (async () => {
         check();
+        // WebKit may not report a failed importScripts request to the parent
+        // worker. Fetch the script explicitly so network failures are retryable.
+        const script = await fetch("/ocr/worker.min.js", {
+          signal,
+          cache: "no-cache",
+        });
+        if (
+          !script.ok ||
+          !/javascript|ecmascript/.test(
+            script.headers.get("content-type") || "",
+          )
+        )
+          throw new Error("OCR worker unavailable");
+        const source = await script.text();
+        check();
+        workerUrl = URL.createObjectURL(
+          new Blob([source], { type: "application/javascript" }),
+        );
         const ready = await createWorker("kor", 1, {
-          workerPath: "/ocr/worker.min.js",
+          workerPath: workerUrl,
+          workerBlobURL: false,
           corePath: "/ocr/core",
           langPath: "/ocr/lang",
           errorHandler: fail,
@@ -209,5 +229,6 @@ export async function recognizeOrderImages(
     clearTimeout(timeout);
     signal.removeEventListener("abort", abort);
     await worker?.terminate().catch(() => {});
+    if (workerUrl) URL.revokeObjectURL(workerUrl);
   }
 }
