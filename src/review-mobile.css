@@ -139,6 +139,9 @@
   display: none;
 }
 @media (max-width: 600px) {
+  .button.data-export-button {
+    display: none;
+  }
   .review-form-modal .date-field {
     height: 45px;
   }

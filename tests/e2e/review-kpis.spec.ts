@@ -229,6 +229,10 @@ test("review KPIs split review types and receivables and reflect partial/full se
   await expect(completedTypes).toContainText("실배송 2건");
   await expect(completedTypes).toContainText("빈박스 3건");
   await expect(received).toHaveText("정산금액 37,500원");
+  await expect(
+    page.getByRole("button", { name: "내보내기", exact: true }),
+  ).toBeHidden();
+  await page.setViewportSize({ width: 1440, height: 1000 });
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "내보내기", exact: true }).click();
   const csv = await readFile((await (await downloadPromise).path())!, "utf8");

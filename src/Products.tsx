@@ -487,6 +487,7 @@ export default function Products({
           className={`page-actions ${!payback ? "review-view-actions" : ""}`}
         >
           <Button
+            className="data-export-button"
             onClick={() => {
               exportCsv(filtered);
             }}

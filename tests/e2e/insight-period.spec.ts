@@ -203,6 +203,11 @@ test.describe("mobile statistics charts", () => {
     await month(page).selectOption("01");
     for (const width of [360, 390, 768, 844]) {
       await page.setViewportSize({ width, height: 844 });
+      const exportButton = page.getByRole("button", {
+        name: "전체 데이터 내보내기",
+      });
+      if (width <= 600) await expect(exportButton).toBeHidden();
+      else await expect(exportButton).toBeVisible();
       for (const control of [
         year(page),
         month(page),

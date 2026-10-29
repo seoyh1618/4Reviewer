@@ -178,8 +178,10 @@ test("review kanban preserves filters and layout and moves cards only after revi
         name: "상품 등록",
         exact: true,
       });
-      expect((await addButton.boundingBox())!.y).toBe(
-        (await exportButton.boundingBox())!.y,
+      await expect(exportButton).toBeHidden();
+      await expect(addButton).toBeVisible();
+      expect((await addButton.boundingBox())!.width).toBe(
+        (await page.locator(".review-view-actions").boundingBox())!.width,
       );
       expect(
         await page.evaluate(

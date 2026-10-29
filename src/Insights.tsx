@@ -146,7 +146,10 @@ export default function Insights({
               ))}
             </select>
           </div>
-          <Button onClick={() => exportCsv(items)}>
+          <Button
+            className="data-export-button"
+            onClick={() => exportCsv(items)}
+          >
             <Download size={16} />
             전체 데이터 내보내기
           </Button>

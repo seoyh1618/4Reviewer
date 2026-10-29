@@ -705,7 +705,12 @@ export default function App() {
               </div>
             </dl>
             <PwaInstallButton />
-            <Button onClick={() => exportCsv(items)}>내 데이터 내보내기</Button>
+            <Button
+              className="data-export-button"
+              onClick={() => exportCsv(items)}
+            >
+              내 데이터 내보내기
+            </Button>
           </div>
           <div className="modal-footer">
             <Button variant="ghost" onClick={() => void logout()}>

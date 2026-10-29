@@ -233,10 +233,15 @@ test.describe("mobile review form and sorting", () => {
     await expect(
       sort.getByRole("button", { name: "구매가 정렬" }),
     ).toHaveAttribute("aria-pressed", "true");
+    await expect(
+      page.getByRole("button", { name: "내보내기", exact: true }),
+    ).toBeHidden();
+    await page.setViewportSize({ width: 1440, height: 1000 });
     const downloadPromise = page.waitForEvent("download");
     await page.getByRole("button", { name: "내보내기", exact: true }).click();
     const csv = await readFile((await (await downloadPromise).path())!, "utf8");
     expect(csv.indexOf('"상품 1"')).toBeLessThan(csv.indexOf('"상품 23"'));
+    await page.setViewportSize({ width: 390, height: 844 });
     await sort
       .getByRole("button", { name: "플랫폼 정렬", exact: true })
       .click();
