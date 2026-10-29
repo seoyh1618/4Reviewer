@@ -15,7 +15,7 @@ export default defineConfig({
     { name: "chrome", use: { channel: "chrome" } },
     {
       name: "webkit",
-      testMatch: "**/mobile-review-form.spec.ts",
+      testMatch: ["**/mobile-review-form.spec.ts", "**/order-ocr.spec.ts"],
       use: { browserName: "webkit" },
     },
   ],

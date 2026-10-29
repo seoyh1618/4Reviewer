@@ -59,6 +59,10 @@ jobs:
         run: npx playwright test tests/e2e/workspace.spec.ts tests/e2e/review-kpis.spec.ts tests/e2e/kanban.spec.ts tests/e2e/calendar-processing.spec.ts tests/e2e/review-type-filter.spec.ts tests/e2e/signup-code.spec.ts tests/e2e/earnings.spec.ts tests/e2e/order-trend.spec.ts tests/e2e/insight-period.spec.ts tests/e2e/chart-tooltip.spec.ts tests/e2e/auth-mobile.spec.ts tests/e2e/pwa.spec.ts tests/e2e/mobile-cards.spec.ts tests/e2e/mobile-review-form.spec.ts
         env:
           DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+      - name: Multi-image OCR on Chrome and WebKit
+        run: npx playwright test tests/e2e/order-ocr.spec.ts
+        env:
+          DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
   deploy:
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.PRODUCTION_DEPLOY_ENABLED == 'true'
     needs: verify
