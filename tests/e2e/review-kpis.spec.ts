@@ -167,9 +167,8 @@ test("review KPIs split review types and receivables and reflect partial/full se
   await expect(kpis).toBeVisible();
   await page.setViewportSize({ width: 360, height: 844 });
   await expect(kpis).toBeHidden();
-  await page
-    .getByRole("button", { name: "테이블뷰로 보기", exact: true })
-    .click();
+  await expect(page.locator(".review-view-toggle")).toHaveCount(0);
+  await expect(page.locator(".review-kanban")).toHaveCount(0);
   await page.getByLabel("상품 검색").fill("정산 전환 대상");
   await expect(values).toHaveText(["1건", "0건", "0건", "1건", "7,000원"]);
   await page.locator(".mobile-product").click();

@@ -95,6 +95,16 @@ export default function Products({
   payback?: boolean;
 }) {
   const [page, setPage] = useState(1);
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia("(max-width: 600px)").matches,
+  );
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 600px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const [layout, setLayout] = useState(() => {
     try {
       return localStorage.getItem(`${preferenceKey}:layout`) === "kanban"
@@ -104,7 +114,7 @@ export default function Products({
       return "table";
     }
   });
-  const kanban = !payback && layout === "kanban";
+  const kanban = !mobile && !payback && layout === "kanban";
   useEffect(() => {
     if (payback) return;
     try {
@@ -484,7 +494,7 @@ export default function Products({
             <Download size={17} />
             내보내기
           </Button>
-          {!payback && (
+          {!payback && !mobile && (
             <Button
               className="review-view-toggle"
               aria-pressed={kanban}

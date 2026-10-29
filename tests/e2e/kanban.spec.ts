@@ -160,8 +160,47 @@ test("review kanban preserves filters and layout and moves cards only after revi
   );
   await page.getByLabel("정렬", { exact: true }).selectOption("recent");
 
-  for (const width of [1440, 768, 390, 360]) {
+  for (const width of [1440, 768, 600, 390, 360, 320]) {
     await page.setViewportSize({ width, height: width <= 768 ? 844 : 1000 });
+    if (width <= 600) {
+      await expect(page.locator(".review-view-toggle")).toHaveCount(0);
+      await expect(board).toHaveCount(0);
+      await expect(page.locator(".mobile-product")).toHaveCount(20);
+      await page.reload();
+      await expect(board).toHaveCount(0);
+      await expect(page.locator(".review-view-toggle")).toHaveCount(0);
+      await expect(page.locator(".mobile-product")).toHaveCount(20);
+      const exportButton = page.getByRole("button", {
+        name: "내보내기",
+        exact: true,
+      });
+      const addButton = page.getByRole("button", {
+        name: "상품 등록",
+        exact: true,
+      });
+      expect((await addButton.boundingBox())!.y).toBe(
+        (await exportButton.boundingBox())!.y,
+      );
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth <= innerWidth,
+        ),
+      ).toBe(true);
+      if (width === 390) {
+        await page.screenshot({
+          path: "docs/screenshots/mobile-without-kanban.png",
+          animations: "disabled",
+        });
+      }
+      await page.locator(".mobile-product").first().click();
+      await expect(dialog).toBeVisible();
+      await dialog
+        .locator(".detail-footer")
+        .getByRole("button", { name: "닫기", exact: true })
+        .click();
+      continue;
+    }
+    await expect(board).toBeVisible();
     await board.evaluate((el) => {
       el.scrollLeft = 0;
       el.querySelectorAll(".kanban-lane").forEach((lane) => {
@@ -239,6 +278,10 @@ test("review kanban preserves filters and layout and moves cards only after revi
     }
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await expect(board).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "테이블뷰로 보기", exact: true }),
+  ).toBeVisible();
   expect(
     (
       await new AxeBuilder({ page })
