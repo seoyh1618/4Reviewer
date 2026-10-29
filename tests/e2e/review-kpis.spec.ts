@@ -137,7 +137,7 @@ test("review KPIs split review types and receivables and reflect partial/full se
         .analyze()
     ).violations,
   ).toEqual([]);
-  await page.setViewportSize({ width: 360, height: 844 });
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByLabel("리뷰 타입 필터").selectOption("실배송");
   await expect(values).toHaveText(["3건", "0건", "1건", "2건", "3,500원"]);
   await expect(completedTypes).toContainText("실배송 2건");
@@ -161,6 +161,7 @@ test("review KPIs split review types and receivables and reflect partial/full se
     .getByRole("button", { name: "칸반뷰로 보기", exact: true })
     .click();
   await expect(values).toHaveText(["7건", "2건", "3건", "4건", "19,500원"]);
+  await page.setViewportSize({ width: 360, height: 844 });
   await expect(kpis).toBeHidden();
   await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(kpis).toBeVisible();

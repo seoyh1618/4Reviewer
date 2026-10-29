@@ -157,9 +157,9 @@ test("compact mobile cards open an overlay and keep status counts current", asyn
       ),
     ).toBe(true);
   }
-  await page.getByLabel("플랫폼 필터").selectOption("네이버");
+  await page.goto("/?view=products&platform=" + encodeURIComponent("네이버"));
   await expect(counts).toHaveText(["1", "1", "0", "0", "0"]);
-  await page.getByLabel("플랫폼 필터").selectOption("");
+  await page.getByRole("button", { name: "플랫폼 네이버 선택 해제" }).click();
   await page.getByLabel("상품 검색").fill("없는 상품명");
   await expect(counts).toHaveText(["0", "0", "0", "0", "0"]);
   await page.getByLabel("상품 검색").fill("리뷰 제안 담당자");

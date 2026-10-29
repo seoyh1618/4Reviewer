@@ -376,7 +376,12 @@ test("mobile 360/390 and tablet 768: navigation, filters, calendar, registration
     .click();
   await page.getByRole("textbox", { name: "상품 검색" }).fill("라운드랩 1025");
   await expect(page.locator(".mobile-product")).toHaveCount(1);
-  await page.getByLabel("플랫폼 필터").selectOption("네이버");
+  await page.goto(
+    "/?view=products&q=" +
+      encodeURIComponent("라운드랩 1025") +
+      "&platform=" +
+      encodeURIComponent("네이버"),
+  );
   await expect(page.getByText("검색 결과가 없어요")).toBeVisible();
   await page.getByRole("button", { name: "필터 초기화" }).click();
   await expect(page.locator(".mobile-product")).toHaveCount(20);
@@ -582,14 +587,17 @@ test("reference login and desktop screenshots, keyboard modal close", async ({
   });
   await page.getByRole("button", { name: "상품 등록", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
-  await page.getByLabel("구매 플랫폼").selectOption("11번가");
+  await page
+    .getByRole("dialog")
+    .getByLabel("구매 플랫폼")
+    .selectOption("11번가");
   await page.screenshot({
     path: "docs/screenshots/registration-white.png",
     animations: "disabled",
   });
-  await expect(page.getByLabel("리뷰 타입", { exact: true })).toHaveValue(
-    "실배송",
-  );
+  await expect(
+    page.getByRole("dialog").getByLabel("리뷰 타입", { exact: true }),
+  ).toHaveValue("실배송");
   await page.keyboard.press("Escape");
   await expect(page.getByRole("dialog")).not.toBeVisible();
 });
@@ -862,7 +870,7 @@ test("column picker: toolbar alignment, grouped toggles, persistence and mobile 
       page.getByRole("textbox", { name: "상품 검색" }),
       page.getByLabel("플랫폼 필터"),
       page.getByLabel("리뷰 타입 필터"),
-      page.getByLabel("정렬"),
+      page.getByLabel("정렬", { exact: true }),
       trigger,
     ];
     const boxes = await Promise.all(
@@ -967,24 +975,17 @@ test("column picker: toolbar alignment, grouped toggles, persistence and mobile 
     .click();
   for (const width of [360, 390]) {
     await page.setViewportSize({ width, height: 1000 });
-    await trigger.click();
-    await picker
-      .getByRole("button", { name: "핵심 열만", exact: true })
-      .click();
-    const card = page.locator(".mobile-product");
+    await expect(trigger).toBeHidden();
+    await expect(picker).toBeHidden();
+    await expect(page.getByLabel("플랫폼 필터")).toBeHidden();
+    await expect(page.getByLabel("리뷰 타입 필터")).toBeHidden();
+    await expect(page.getByLabel("정렬", { exact: true })).toBeHidden();
     await expect(
-      card.locator("dt").filter({ hasText: "카톡 이름" }),
-    ).toHaveCount(0);
-    await picker
-      .getByRole("group", { name: "열 분류", exact: true })
-      .getByRole("button", { name: "연락처", exact: true })
-      .click();
-    await picker
-      .getByRole("group", { name: "연락처 표시 항목", exact: true })
-      .getByRole("button", { name: "카톡 이름", exact: true })
-      .click();
-    await expect(card).not.toContainText("브랜드 담당자");
-    await expect(picker.locator(".mobile-column-note")).toBeVisible();
+      page.getByRole("group", { name: "정렬할 열", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator(".mobile-product")).not.toContainText(
+      "브랜드 담당자",
+    );
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= innerWidth,
@@ -996,25 +997,11 @@ test("column picker: toolbar alignment, grouped toggles, persistence and mobile 
         .analyze();
       expect(mobileAccessibility.violations).toEqual([]);
     }
-    const filterBoxes = await Promise.all(
-      [
-        page.getByLabel("플랫폼 필터"),
-        page.getByLabel("리뷰 타입 필터"),
-        page.getByLabel("정렬"),
-        trigger,
-      ].map((c) => c.boundingBox()),
-    );
-    expect(filterBoxes[0]!.y).toBe(filterBoxes[1]!.y);
-    expect(filterBoxes[2]!.y).toBe(filterBoxes[3]!.y);
-    expect(filterBoxes[2]!.y).toBeGreaterThan(filterBoxes[0]!.y);
     await page.screenshot({
-      path: `docs/screenshots/column-picker-${width}.png`,
+      path: `docs/screenshots/mobile-columns-${width}.png`,
       fullPage: true,
       animations: "disabled",
     });
-    await picker
-      .getByRole("button", { name: "열 선택 접기", exact: true })
-      .click();
   }
   await page.reload();
   await expect(page.locator(".mobile-product")).not.toContainText(
@@ -1029,9 +1016,9 @@ test("column picker: toolbar alignment, grouped toggles, persistence and mobile 
     .getByRole("button", { name: "닫기", exact: true })
     .last()
     .click();
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await trigger.click();
   await picker.getByRole("button", { name: "전체 선택", exact: true }).click();
-  await page.setViewportSize({ width: 1440, height: 1000 });
   await expect(table.getByRole("columnheader")).toHaveCount(20);
 });
 

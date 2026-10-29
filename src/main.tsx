@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import "./assets/fonts/pretendard/pretendardvariable-dynamic-subset.css";
 import "./styles.css";
 import "./workspace.css";
+import "./review-mobile.css";
 import "./auth-mobile.css";
 import App from "./App";
 import { PwaProvider } from "./PwaInstall";

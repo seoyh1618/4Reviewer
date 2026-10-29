@@ -2000,7 +2000,7 @@ body {
 }
 @media (max-width: 600px) {
   .modal.review-detail-modal {
-    width: calc(100vw - 24px);
+    width: calc(100% - 24px);
     max-height: 88dvh;
   }
   .review-detail-modal .modal-header,

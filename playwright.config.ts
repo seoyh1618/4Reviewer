@@ -8,10 +8,17 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://127.0.0.1:3188",
-    channel: "chrome",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
+  projects: [
+    { name: "chrome", use: { channel: "chrome" } },
+    {
+      name: "webkit",
+      testMatch: "**/mobile-review-form.spec.ts",
+      use: { browserName: "webkit" },
+    },
+  ],
   webServer: {
     command:
       "NODE_ENV=production API_RATE_LIMIT=2000 PORT=3188 DATABASE_PATH=./test-results/e2e.sqlite node server/index.mjs",

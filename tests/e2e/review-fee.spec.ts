@@ -294,12 +294,10 @@ test("additional review fee: fee-only mobile settlement, save retry and paid amo
     .getByRole("dialog")
     .getByRole("group", { name: "리뷰비만 받는 상품 진행 단계", exact: true });
   await expect(
-    steps.getByRole("button", { name: "정산 완료 전환", exact: true }),
+    steps.getByRole("button", { name: "정산 완료", exact: true }),
   ).toBeEnabled();
   await expect(steps.getByRole("button")).toHaveCount(1);
-  await steps
-    .getByRole("button", { name: "정산 완료 전환", exact: true })
-    .click();
+  await steps.getByRole("button", { name: "정산 완료", exact: true }).click();
   const dialog = page.getByRole("dialog");
   await expect(
     dialog.getByRole("button", { name: "정산 완료 저장", exact: true }),
@@ -332,11 +330,9 @@ test("additional review fee: fee-only mobile settlement, save retry and paid amo
     dialog.getByRole("heading", { name: "상품 상세", exact: true }),
   ).toBeVisible();
   await expect(
-    steps.getByRole("button", { name: "정산 완료 전환", exact: true }),
+    steps.getByRole("button", { name: "정산 완료", exact: true }),
   ).toBeEnabled();
-  await steps
-    .getByRole("button", { name: "정산 완료 전환", exact: true })
-    .click();
+  await steps.getByRole("button", { name: "정산 완료", exact: true }).click();
   await expect(dialog.getByLabel("이번 입금액", { exact: true })).toHaveValue(
     "1000",
   );

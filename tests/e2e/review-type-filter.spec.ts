@@ -93,18 +93,28 @@ test("review type filter coordinates records, counts, KPIs, export and URL resto
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    const platformBox = (await page.getByLabel("플랫폼 필터").boundingBox())!;
-    const typeBox = (await type.boundingBox())!;
-    expect(typeBox.y).toBe(platformBox.y);
-    expect(typeBox.x).toBeGreaterThanOrEqual(platformBox.x + platformBox.width);
-    expect(typeBox.height).toBeGreaterThanOrEqual(44);
-    if (width <= 600)
+    if (width <= 600) {
+      await expect(type).toBeHidden();
+      await expect(page.getByLabel("플랫폼 필터")).toBeHidden();
+      await expect(
+        page.getByRole("button", { name: "리뷰 타입 실배송 선택 해제" }),
+      ).toBeVisible();
       await expect(page.locator(".mobile-product")).toHaveCount(2);
+    } else {
+      const platformBox = (await page.getByLabel("플랫폼 필터").boundingBox())!;
+      const typeBox = (await type.boundingBox())!;
+      expect(typeBox.y).toBe(platformBox.y);
+      expect(typeBox.x).toBeGreaterThanOrEqual(
+        platformBox.x + platformBox.width,
+      );
+      expect(typeBox.height).toBeGreaterThanOrEqual(44);
+    }
     await page.screenshot({
       path: `docs/screenshots/review-type-filter-${width}.png`,
       animations: "disabled",
     });
   }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await type.selectOption("빈박스");
   await expect(kpis).toHaveText(["21건", "0건", "20건", "1건", "231,000원"]);
   await page.getByLabel("상품 검색").fill("없는 상품");
@@ -115,7 +125,7 @@ test("review type filter coordinates records, counts, KPIs, export and URL resto
   await page.goto("/?view=products&shipping=invalid");
   await expect(type).toHaveValue("");
   await expect(kpis).toHaveText(["23건", "0건", "21건", "2건", "235,000원"]);
-  await page.goto("/?view=payback");
-  await type.selectOption("실배송");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/?view=payback&shipping=" + encodeURIComponent("실배송"));
   await expect(page.locator(".mobile-product")).toHaveCount(2);
 });

@@ -19,6 +19,10 @@ import {
   Wallet,
   Kanban,
   Table2,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  X,
 } from "lucide-react";
 import {
   platforms,
@@ -45,6 +49,14 @@ import ReviewProgress, { type ReviewStage } from "./ReviewProgress";
 import ReviewKanban from "./ReviewKanban";
 import ReviewKpis from "./ReviewKpis";
 import type { Review, Filters } from "./types";
+
+import {
+  compareReviews,
+  parseReviewSort,
+  nextReviewSort,
+  reviewSortColumns,
+  reviewSortLabel,
+} from "../shared/review-sorting.mjs";
 
 const PAGE_SIZE = 20;
 
@@ -171,13 +183,7 @@ export default function Products({
     () =>
       matchingItems
         .filter((i) => matchesStatus(i, filters.status))
-        .sort((a, b) =>
-          filters.sort === "price"
-            ? b.price - a.price
-            : filters.sort === "due"
-              ? (a.dueDate || "9999").localeCompare(b.dueDate || "9999")
-              : b.purchaseDate.localeCompare(a.purchaseDate),
-        ),
+        .sort(compareReviews(filters.sort)),
     [matchingItems, filters.status, filters.sort],
   );
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -428,6 +434,33 @@ export default function Products({
         : key === "detail"
           ? "detail-column"
           : undefined;
+  const activeSort = parseReviewSort(filters.sort);
+  const sortColumn = (key: string) =>
+    f("sort", nextReviewSort(filters.sort, key));
+  const mobileSortKeys = payback
+    ? ["product", "paidAt", "remaining", "platform", "shipping"]
+    : ["product", "purchaseDate", "price", "platform", "shipping"];
+  const sortButton = (key: string, label: string, mobile = false) => {
+    const selected = activeSort.key === key;
+    const Icon = selected
+      ? activeSort.direction === "asc"
+        ? ArrowUp
+        : ArrowDown
+      : ArrowUpDown;
+    return (
+      <button
+        type="button"
+        className={`column-sort-button ${selected ? "is-sorted" : ""}`}
+        aria-label={`${label} 정렬`}
+        aria-pressed={mobile ? selected : undefined}
+        title={`${label} · 누르면 ${parseReviewSort(nextReviewSort(filters.sort, key)).direction === "asc" ? "오름차순" : "내림차순"}`}
+        onClick={() => sortColumn(key)}
+      >
+        <span>{label}</span>
+        <Icon size={13} aria-hidden="true" />
+      </button>
+    );
+  };
   return (
     <>
       <div className="page-title reviews-page-title">
@@ -571,6 +604,11 @@ export default function Products({
               <option value="recent">최근 구매순</option>
               <option value="due">마감 임박순</option>
               <option value="price">구매금액순</option>
+              {!["recent", "due", "price"].includes(filters.sort) && (
+                <option value={filters.sort}>
+                  {reviewSortLabel(filters.sort)}
+                </option>
+              )}
             </select>
             {!kanban && (
               <button
@@ -595,6 +633,44 @@ export default function Products({
             )}
           </div>
         </div>
+        <div
+          className="mobile-column-sorting"
+          role="group"
+          aria-label="정렬할 열"
+        >
+          {mobileSortKeys.map((key) => (
+            <div key={key}>
+              {sortButton(key, reviewSortColumns[key].label, true)}
+            </div>
+          ))}
+        </div>
+        <span className="sr-only" role="status">
+          {reviewSortLabel(filters.sort)}
+        </span>
+        {(filters.platform || filters.shippingMethod) && (
+          <div className="mobile-applied-filters" aria-label="적용된 필터">
+            {filters.platform && (
+              <button
+                type="button"
+                aria-label={`플랫폼 ${filters.platform} 선택 해제`}
+                onClick={() => f("platform", "")}
+              >
+                {filters.platform}
+                <X size={13} aria-hidden="true" />
+              </button>
+            )}
+            {filters.shippingMethod && (
+              <button
+                type="button"
+                aria-label={`리뷰 타입 ${filters.shippingMethod} 선택 해제`}
+                onClick={() => f("shippingMethod", "")}
+              >
+                {filters.shippingMethod}
+                <X size={13} aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        )}
         {!kanban && columnsOpen && (
           <ColumnPicker
             id={columnPickerId}
@@ -661,9 +737,21 @@ export default function Products({
                         key={c.key}
                         scope="col"
                         className={columnClass(c.key)}
+                        aria-label={c.label}
+                        aria-sort={
+                          Object.hasOwn(reviewSortColumns, c.key)
+                            ? activeSort.key === c.key
+                              ? activeSort.direction === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                            : undefined
+                        }
                       >
                         {c.key === "detail" ? (
                           <span className="sr-only">{c.label}</span>
+                        ) : Object.hasOwn(reviewSortColumns, c.key) ? (
+                          sortButton(c.key, c.label)
                         ) : (
                           c.label
                         )}
@@ -695,7 +783,10 @@ export default function Products({
                     onClick={() => onOpen(i)}
                   >
                     <span className="mobile-card-heading">
-                      <Platform name={platformLabel(i)} />
+                      <span className="mobile-card-platform">
+                        <Platform name={platformLabel(i)} />
+                        {i.shippingMethod && <small>{i.shippingMethod}</small>}
+                      </span>
                       <span className="mobile-card-badges">
                         <ReviewBadge item={i} />
                         <PaybackBadge item={i} />
@@ -706,11 +797,26 @@ export default function Products({
                       <ChevronRight size={16} aria-hidden="true" />
                     </span>
                     <span className="mobile-card-summary">
-                      {i.reviewStatus === "todo" ? (
-                        <DueBadge date={i.dueDate} />
-                      ) : (
-                        <span className="mobile-card-type">{i.reviewType}</span>
-                      )}
+                      <span className="mobile-card-context">
+                        <time
+                          dateTime={
+                            payback ? i.paidAt || undefined : i.purchaseDate
+                          }
+                        >
+                          {payback
+                            ? i.paidAt
+                              ? fullDate(i.paidAt)
+                              : "정산일 미정"
+                            : fullDate(i.purchaseDate)}
+                        </time>
+                        {i.reviewStatus === "todo" ? (
+                          <DueBadge date={i.dueDate} />
+                        ) : (
+                          <span className="mobile-card-type">
+                            {i.reviewType}
+                          </span>
+                        )}
+                      </span>
                       <span className="mobile-card-amount">
                         <small>{payback ? "남은 페이백" : "구매가"}</small>
                         <b>{won(payback ? remainingPayback(i) : i.price)}원</b>

@@ -168,6 +168,7 @@ export default function ReviewForm({
         if (!saving) onClose();
       }}
       wide
+      className="review-form-modal"
     >
       <form onSubmit={submit}>
         <div className="modal-body form-body">
