@@ -54,6 +54,9 @@ export default function ReviewTemplates({
   const [synced, setSynced] = useState("");
   const [search, setSearch] = useState("");
   const [type, setType] = useState("");
+  const [mobile, setMobile] = useState(
+    () => window.matchMedia("(max-width: 600px)").matches,
+  );
   const [editor, setEditor] = useState<{ item?: ReviewTemplate } | null>(null);
   const [copyFallback, setCopyFallback] = useState<ReviewTemplate | null>(null);
   const [copied, setCopied] = useState("");
@@ -61,6 +64,13 @@ export default function ReviewTemplates({
   const counter = useRef(0),
     alive = useRef(true),
     copyingRef = useRef(false);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 600px)");
+    const update = () => setMobile(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const load = useCallback(async () => {
     const run = ++counter.current;
     setLoading(true);
@@ -167,16 +177,19 @@ export default function ReviewTemplates({
       if (alive.current) setCopying("");
     }
   }
+  // Hidden desktop filters must not hide templates on a narrow screen.
+  const activeSearch = mobile ? "" : search;
+  const activeType = mobile ? "" : type;
   const filtered = templates.filter(
     (t) =>
       (!groupFilter ||
         (groupFilter === "ungrouped"
           ? !t.groupId
           : t.groupId === groupFilter)) &&
-      (!type || type === t.reviewType) &&
+      (!activeType || activeType === t.reviewType) &&
       `${t.title} ${t.content}`
         .toLocaleLowerCase()
-        .includes(search.trim().toLocaleLowerCase()),
+        .includes(activeSearch.trim().toLocaleLowerCase()),
   );
   return (
     <section className="templates-page" aria-label="리뷰 템플릿 목록">
@@ -220,6 +233,7 @@ export default function ReviewTemplates({
           ].map((g) => (
             <button
               key={g.id}
+              title={g.name}
               aria-label={`${g.name} (${g.count})`}
               aria-pressed={groupFilter === g.id}
               onClick={() => setGroupFilter(g.id)}
@@ -279,8 +293,20 @@ export default function ReviewTemplates({
       ) : (
         <>
           <div className="template-list-meta">
-            템플릿 <strong>{filtered.length}</strong>개
+            <span>
+              템플릿 <strong>{filtered.length}</strong>개
+            </span>
+            <Button
+              className="template-mobile-create"
+              variant="primary"
+              onClick={() => setEditor({})}
+            >
+              <Plus size={16} />새 템플릿
+            </Button>
           </div>
+          <p className="template-mobile-hint">
+            [대괄호]를 실제 사용 경험으로 바꿔 주세요.
+          </p>
           <div className="template-grid">
             {filtered.map((item) => (
               <article
@@ -334,11 +360,11 @@ export default function ReviewTemplates({
             <div className="template-empty">
               <Search size={28} />
               <h2>
-                {groupFilter && !search && !type
+                {groupFilter && !activeSearch && !activeType
                   ? "이 그룹에 템플릿이 없습니다"
                   : "검색 결과가 없습니다"}
               </h2>
-              {groupFilter && !search && !type && (
+              {groupFilter && !activeSearch && !activeType && (
                 <Button variant="primary" onClick={() => setEditor({})}>
                   이 그룹에 템플릿 추가
                 </Button>
