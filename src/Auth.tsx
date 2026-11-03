@@ -231,12 +231,12 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
           </button>
         </p>
         <p className="auth-note">
-          포 리뷰어 · 상품부터 리뷰, 페이백까지 한곳에서.
+          포리뷰어 · 상품부터 리뷰, 페이백까지 한곳에서.
         </p>
       </div>
       <footer className="auth-footer">
         For Reviewer <span>·</span> Your reviews, beautifully organized.
-        <span>·</span> <a href="/about.html">서비스 소개</a>
+        <span>·</span> <a href="/about.html">포리뷰어 소개</a>
       </footer>
     </main>
   );
