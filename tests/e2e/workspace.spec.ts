@@ -453,8 +453,14 @@ test("mobile 360/390 and tablet 768: navigation, filters, calendar, registration
     .getByRole("button", { name: "캘린더", exact: true })
     .click();
   await page.getByRole("button", { name: "다음 달" }).click();
+  const [currentYear, currentMonth] = today().split("-").map(Number);
+  const nextMonth = new Date(Date.UTC(currentYear, currentMonth, 1));
   await expect(
-    page.getByRole("heading", { name: /2026년 11월/ }),
+    page.getByRole("heading", {
+      name: new RegExp(
+        `${nextMonth.getUTCFullYear()}년 ${nextMonth.getUTCMonth() + 1}월`,
+      ),
+    }),
   ).toBeVisible();
   await page.getByRole("button", { name: "오늘", exact: true }).click();
 });

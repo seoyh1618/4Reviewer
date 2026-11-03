@@ -5,6 +5,9 @@ import { today } from "../../shared/domain.mjs";
 test("calendar uses actual review processing dates and updates after completion, date edits and reversal", async ({
   page,
 }) => {
+  // Keep the 5th/7th as past dates even when this test runs early in a month.
+  const calendarToday = `${today().slice(0, 7)}-28`;
+  await page.clock.setFixedTime(new Date(`${calendarToday}T03:00:00Z`));
   const signup = await page.request.post("/api/auth/signup", {
     data: {
       email: `calendar-${randomUUID()}@example.test`,
@@ -13,7 +16,7 @@ test("calendar uses actual review processing dates and updates after completion,
     },
   });
   expect(signup.status()).toBe(201);
-  const month = today().slice(0, 7);
+  const month = calendarToday.slice(0, 7);
   const processed = `${month}-05`;
   const revised = `${month}-07`;
   const deadline = `${month}-20`;
@@ -47,7 +50,7 @@ test("calendar uses actual review processing dates and updates after completion,
   await create("같은 날 완료한 리뷰", processed, deadline);
   await create("지난달 처리한 리뷰", previous, deadline);
   await create("처리일 없는 기존 완료 리뷰", "", deadline);
-  await create("오늘 마감인 작성 전 리뷰", "", today(), "todo");
+  await create("오늘 마감인 작성 전 리뷰", "", calendarToday, "todo");
 
   const day = (date: string, count: number) =>
     page.getByRole("button", {
@@ -170,6 +173,6 @@ test("calendar uses actual review processing dates and updates after completion,
   ).toMatchObject({
     reviewStatus: "done",
     reviewedAt: revised,
-    dueDate: today(),
+    dueDate: calendarToday,
   });
 });
