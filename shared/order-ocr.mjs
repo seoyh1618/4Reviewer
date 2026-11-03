@@ -13,12 +13,49 @@ const key = (value) => String(value).replace(/\s+/g, "").toLowerCase();
 const unique = (values) => [
   ...new Map(values.map((v) => [key(v), v])).values(),
 ];
+// Normalize spacing only in known labels, never inside product/store names.
+const labelPatterns = [
+  "최종결제금액",
+  "실제결제금액",
+  "총결제금액",
+  "실결제금액",
+  "총결제액",
+  "결제금액",
+  "결제합계",
+  "상품주문금액",
+  "총주문금액",
+  "주문금액",
+  "상품주문번호",
+  "주문번호",
+  "주문일시",
+  "주문일자",
+  "구매일시",
+  "구매일자",
+  "결제일시",
+  "결제일자",
+  "주문일",
+  "구매일",
+  "결제일",
+  "상품명",
+  "상품이름",
+  "판매자명",
+  "판매처",
+  "스토어명",
+  "받는사람",
+  "연락처",
+].map((label) => [new RegExp(`^${[...label].join("\\s*")}`), label]);
+const normalizeLabel = (line) => {
+  for (const [pattern, label] of labelPatterns)
+    if (pattern.test(line)) return line.replace(pattern, label);
+  return line;
+};
 const normalizedLines = (text) =>
   String(text)
     .normalize("NFKC")
     .replace(/[ㆍᆞ•∙・]/g, "·")
     .split(/\r?\n/)
     .map((s) => s.replace(/[^\S\n]+/g, " ").trim())
+    .map(normalizeLabel)
     .filter(Boolean);
 const datePattern = /(20\d{2})\s*[.년/-]\s*(\d{1,2})\s*[.월/-]\s*(\d{1,2})/;
 const boundary =
@@ -27,10 +64,10 @@ const cardAction =
   /^(?:옵션|사이즈|색상|수량|주문\s*취소|배송\s*조회|장바구니\s*담기|교환|반품|구매\s*확정|리뷰\s*쓰기)/;
 const quantityPattern = /^(?:수량\s*[:：]?\s*)?(\d+)\s*(?:개|점|ea)\s*$/i;
 const amountPattern =
-  /^(?:₩\s*)?(\d{1,3}(?:,\d{3})+|\d+)(?:\s*(?:원|KRW))?\s*$/i;
+  /^(?:₩\s*)?(\d{1,3}(?:\s*,\s*\d{3})+|\d{1,3}(?:\s+\d{3})+|\d+)(?:\s*(?:원|KRW))?\s*$/i;
 const money = (text) => {
   const match = text.match(amountPattern);
-  const value = match ? Number(match[1].replaceAll(",", "")) : NaN;
+  const value = match ? Number(match[1].replace(/[,\s]/g, "")) : NaN;
   return Number.isSafeInteger(value) && value >= 0 && value <= 1_000_000_000
     ? value
     : undefined;
@@ -180,7 +217,7 @@ function analyze(text, hasOrderContext) {
   const priceLabels = [
     [
       3,
-      /^(?:총\s*결제\s*금액|최종\s*결제\s*금액|실\s*결제\s*금액|실제\s*결제\s*금액|total\s*(?:payment|paid)?)\s*[:：]?\s*(.*)$/i,
+      /^(?:총\s*결제\s*(?:금액|액)|최종\s*결제\s*금액|실\s*결제\s*금액|실제\s*결제\s*금액|total\s*(?:payment|paid)?)\s*[:：]?\s*(.*)$/i,
     ],
     [2, /^(?:결제\s*금액|결제\s*합계)\s*[:：]?\s*(.*)$/i],
     [
@@ -220,8 +257,9 @@ export function parseOrderDocuments(texts) {
   const collect = (field) => unique(pages.flatMap((p) => p[field]));
   const platforms = collect("platforms"),
     orders = collect("orders");
-  const fields = {},
-    warnings = [];
+  /** @type {Record<string, string | number>} */
+  const fields = {};
+  const warnings = [];
   if (platforms.length > 1 || orders.length > 1)
     return {
       fields,
@@ -266,4 +304,21 @@ export function parseOrderDocuments(texts) {
 
 export function parseOrderText(text) {
   return parseOrderDocuments([text]).fields;
+}
+
+// Recognition confidence warnings follow the image until the user edits its
+// transcript. A conflicting numeric/date reading must never auto-fill a form.
+export function parseRecognizedOrders(pages) {
+  const result = parseOrderDocuments(pages.map((p) => p.text));
+  for (const page of pages)
+    for (const field of page.uncertainFields || []) delete result.fields[field];
+  return {
+    fields: result.fields,
+    warnings: [
+      ...new Set([
+        ...result.warnings,
+        ...pages.flatMap((p) => p.warnings || []),
+      ]),
+    ],
+  };
 }

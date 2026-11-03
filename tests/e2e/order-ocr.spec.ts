@@ -1,6 +1,54 @@
 import { test, expect, type Page } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
+import { qualityOrderImage } from "./fixtures/order-quality";
+
+test("small, dark and separated-column checkouts keep the final payment and product", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  // The form's initial date must differ from the capture; otherwise a failed
+  // date extraction can pass unnoticed on the fixture's calendar day.
+  await page.clock.setFixedTime(new Date("2026-12-15T00:00:00Z"));
+  await openForm(page);
+  for (const [index, variant] of (
+    ["columns", "small", "dark"] as const
+  ).entries()) {
+    if (index)
+      await page
+        .getByRole("button", { name: "상품 등록", exact: true })
+        .click();
+    const dialog = page.getByRole("dialog");
+    const start = Date.now();
+    await dialog
+      .getByLabel("주문내역 이미지 업로드")
+      .setInputFiles(await qualityOrderImage(page, variant));
+    await expect(dialog.getByRole("status")).toContainText(
+      "찾은 정보를 채웠어요",
+      { timeout: 100000 },
+    );
+    await test.info().attach(`quality-${variant}`, {
+      body: JSON.stringify(
+        {
+          ms: Date.now() - start,
+          text: await dialog
+            .getByLabel("OCR 인식 원문", { exact: true })
+            .inputValue(),
+          purchaseDate: await dialog.getByLabel("구매일").inputValue(),
+          warnings: await dialog.getByRole("note").allTextContents(),
+        },
+        null,
+        2,
+      ),
+      contentType: "application/json",
+    });
+    await expect(dialog.getByLabel("상품명")).toHaveValue("데일리 머그");
+    await expect(dialog.getByLabel("구매금액")).toHaveValue("22000");
+    await expect(dialog.getByLabel("구매 플랫폼")).toHaveValue("네이버");
+    await expect(dialog.getByLabel("구매일")).toHaveValue("2026-11-03");
+    await dialog.getByRole("button", { name: "취소", exact: true }).click();
+  }
+});
 
 async function screenshotFixture(
   page: Page,

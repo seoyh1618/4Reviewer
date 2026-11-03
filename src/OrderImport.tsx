@@ -12,12 +12,13 @@ import {
   OCR_MAX_FILES,
   OCR_MAX_FILE_BYTES,
   OCR_MAX_BATCH_BYTES,
+  type OcrPageResult,
 } from "./ocr";
-import { parseOrderDocuments } from "../shared/order-ocr.mjs";
+import { parseRecognizedOrders } from "../shared/order-ocr.mjs";
 import { Button } from "./ui";
 import type { ReviewInput } from "./types";
 
-type PageImage = {
+type PageImage = Partial<OcrPageResult> & {
   id: string;
   file: File;
   url: string;
@@ -69,7 +70,7 @@ export default function OrderImport({
         );
       return;
     }
-    const result = parseOrderDocuments(next.map((p) => p.text!));
+    const result = parseRecognizedOrders(next);
     onApply(result.fields as Partial<ReviewInput>);
     setWarnings(result.warnings);
     setApplied(Object.keys(result.fields).length > 0);
@@ -99,7 +100,13 @@ export default function OrderImport({
     onApply({});
     let working = next.map((p) =>
       queued.some((q) => q.id === p.id)
-        ? { ...p, text: undefined, error: undefined }
+        ? {
+            ...p,
+            text: undefined,
+            error: undefined,
+            warnings: undefined,
+            uncertainFields: undefined,
+          }
         : p,
     );
     updatePages(working);
@@ -355,7 +362,13 @@ export default function OrderImport({
                     updatePages(
                       current.current.map((entry) =>
                         entry.id === p.id
-                          ? { ...entry, text: e.target.value, error: undefined }
+                          ? {
+                              ...entry,
+                              text: e.target.value,
+                              error: undefined,
+                              warnings: undefined,
+                              uncertainFields: undefined,
+                            }
                           : entry,
                       ),
                     );

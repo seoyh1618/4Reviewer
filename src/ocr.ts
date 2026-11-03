@@ -1,34 +1,119 @@
 // Keep the client bundled; workers/models are loaded locally on demand.
-import { createWorker, type Worker } from "tesseract.js";
+import { createWorker, PSM, type Worker } from "tesseract.js";
+import {
+  ocrLines,
+  readingRows,
+  tileOcrLines,
+  enhanceOcrPixels,
+} from "../shared/ocr-layout.mjs";
+import { parseOrderText } from "../shared/order-ocr.mjs";
 
 export class OrderOcrError extends Error {}
 export const OCR_MAX_FILES = 6;
 export const OCR_MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const OCR_MAX_BATCH_BYTES = 30 * 1024 * 1024;
-export type OcrPageResult = { text: string; error?: string };
+export type OcrPageResult = {
+  text: string;
+  error?: string;
+  warnings?: string[];
+  uncertainFields?: ("price" | "purchaseDate" | "orderNumber")[];
+};
+type OcrLine = {
+  text: string;
+  confidence: number;
+  bbox: { x0: number; x1: number; y0: number; y1: number };
+};
 
-function mergeTiles(texts: string[]) {
-  const lines: string[] = [];
-  const key = (line: string) => line.replace(/\s+/g, "");
-  for (const text of texts) {
-    const next = text
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-    let overlap = 0;
-    for (
-      let count = Math.min(lines.length, next.length, 15);
-      count > 0;
-      count--
-    ) {
-      if (lines.slice(-count).every((line, i) => key(line) === key(next[i]))) {
-        overlap = count;
-        break;
-      }
+function enhance(canvas: HTMLCanvasElement, darkOnly = false) {
+  const ctx = canvas.getContext("2d")!;
+  const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  enhanceOcrPixels(pixels.data, darkOnly);
+  ctx.putImageData(pixels, 0, 0);
+}
+
+async function refineLines(
+  worker: Worker,
+  canvas: HTMLCanvasElement,
+  lines: OcrLine[],
+  check: () => void,
+  budget: { remaining: number },
+) {
+  const refined = [...lines];
+  const critical =
+    /(?:주문|구매|결제)\s*(?:일|번호|금액)|총\s*결제|최종\s*결제|실\s*결제/;
+  const rows = readingRows(lines);
+  const candidates = lines
+    .map((line, index) => ({
+      line,
+      index,
+      critical: rows.some(
+        (row) =>
+          critical.test(row.text.replace(/\s/g, "")) &&
+          line.bbox.y0 >= row.bbox.y0 &&
+          line.bbox.y1 <= row.bbox.y1,
+      ),
+    }))
+    .filter(
+      ({ line, critical }) =>
+        (line.confidence < 82 || critical) && line.text.length > 1,
+    )
+    .sort(
+      (a, b) =>
+        Number(b.critical) - Number(a.critical) ||
+        a.line.confidence - b.line.confidence,
+    )
+    .slice(0, Math.min(8, budget.remaining));
+  if (!candidates.length) return refined;
+  await worker.setParameters({ tessedit_pageseg_mode: PSM.SINGLE_LINE });
+  for (const { line, index } of candidates) {
+    check();
+    budget.remaining--;
+    const b = line.bbox,
+      pad = 6;
+    const x = Math.max(0, b.x0 - pad),
+      y = Math.max(0, b.y0 - pad);
+    const width = Math.min(canvas.width - x, b.x1 - x + pad);
+    const height = Math.min(canvas.height - y, b.y1 - y + pad);
+    const scale = Math.max(1, Math.min(2, 48 / (b.y1 - b.y0), 2800 / width));
+    const crop = document.createElement("canvas");
+    try {
+      crop.width = Math.ceil(width * scale) + 24;
+      crop.height = Math.ceil(height * scale) + 24;
+      const ctx = crop.getContext("2d")!;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, crop.width, crop.height);
+      ctx.drawImage(
+        canvas,
+        x,
+        y,
+        width,
+        height,
+        12,
+        12,
+        width * scale,
+        height * scale,
+      );
+      enhance(crop);
+      const { data } = await worker.recognize(
+        crop,
+        {},
+        { text: true, blocks: false },
+      );
+      check();
+      const text = data.text.trim().replace(/\s+/g, " ");
+      // A second pass is a candidate, not permission to invent missing text.
+      if (
+        text &&
+        data.confidence >= 75 &&
+        data.confidence >= line.confidence + 5
+      )
+        refined[index] = { ...line, text, confidence: data.confidence };
+    } finally {
+      crop.width = 0;
+      crop.height = 0;
     }
-    lines.push(...next.slice(overlap));
   }
-  return lines.join("\n");
+  return refined;
 }
 
 export async function recognizeOrderImages(
@@ -48,7 +133,9 @@ export async function recognizeOrderImages(
     finished = false,
     imageIndex = 0,
     tileIndex = 0,
-    tileCount = 1;
+    tileCount = 1,
+    progressValue = 0;
+  const retryBudget = { remaining: 24 };
   let fail: (reason: unknown) => void = () => {};
   const failed = new Promise<never>((_, reject) => {
     fail = reject;
@@ -103,15 +190,18 @@ export async function recognizeOrderImages(
               !finished &&
               !signal.aborted &&
               message.status === "recognizing text"
-            )
-              onProgress(
+            ) {
+              progressValue = Math.max(
+                progressValue,
                 Math.round(
-                  ((imageIndex + (tileIndex + message.progress) / tileCount) /
+                  ((imageIndex +
+                    (tileIndex + message.progress * 0.85) / tileCount) /
                     files.length) *
                     100,
                 ),
-                imageIndex,
               );
+              onProgress(progressValue, imageIndex);
+            }
           },
         });
         if (signal.aborted || finished) {
@@ -158,15 +248,17 @@ export async function recognizeOrderImages(
               if (top + segmentHeight >= bitmap.height) break;
             }
             tileCount = tops.length;
-            const texts: string[] = [];
+            const lines: OcrLine[] = [];
+            const originalLines: OcrLine[] = [];
+            const padding = 12;
             for (tileIndex = 0; tileIndex < tops.length; tileIndex++) {
               check();
               const top = tops[tileIndex],
                 height = Math.min(segmentHeight, bitmap.height - top);
               const canvas = document.createElement("canvas");
               try {
-                canvas.width = Math.round(bitmap.width * scale);
-                canvas.height = Math.round(height * scale);
+                canvas.width = Math.round(bitmap.width * scale) + padding * 2;
+                canvas.height = Math.round(height * scale) + padding * 2;
                 const ctx = canvas.getContext("2d");
                 if (!ctx)
                   throw new OrderOcrError(
@@ -180,22 +272,89 @@ export async function recognizeOrderImages(
                   top,
                   bitmap.width,
                   height,
-                  0,
-                  0,
-                  canvas.width,
-                  canvas.height,
+                  padding,
+                  padding,
+                  bitmap.width * scale,
+                  height * scale,
                 );
-                const { data } = await ready.recognize(canvas);
+                enhance(canvas, true);
+                await ready.setParameters({
+                  tessedit_pageseg_mode: PSM.SINGLE_BLOCK,
+                  user_defined_dpi: "300",
+                });
+                const { data } = await ready.recognize(
+                  canvas,
+                  {},
+                  { text: true, blocks: true },
+                );
                 check();
-                texts.push(data.text);
+                const original = ocrLines(data) as OcrLine[];
+                let detected = original;
+                if (!original.length && retryBudget.remaining > 0) {
+                  // Sparse layouts sometimes look empty to block segmentation.
+                  // Retry once after contrast correction, with the same worker.
+                  retryBudget.remaining--;
+                  enhance(canvas);
+                  await ready.setParameters({
+                    tessedit_pageseg_mode: PSM.SPARSE_TEXT,
+                  });
+                  const retry = await ready.recognize(
+                    canvas,
+                    {},
+                    { text: true, blocks: true },
+                  );
+                  check();
+                  detected = ocrLines(retry.data) as OcrLine[];
+                }
+                const refined = await refineLines(
+                  ready,
+                  canvas,
+                  detected,
+                  check,
+                  retryBudget,
+                );
+                const geometry = {
+                  top,
+                  height,
+                  imageHeight: bitmap.height,
+                  scale,
+                  padding,
+                  overlap,
+                };
+                originalLines.push(...tileOcrLines(original, geometry));
+                lines.push(...tileOcrLines(refined, geometry));
               } finally {
                 canvas.width = 0;
                 canvas.height = 0;
               }
             }
-            const text = mergeTiles(texts);
+            const text = readingRows(lines)
+              .map((line) => line.text)
+              .join("\n");
+            const originalText = readingRows(originalLines)
+              .map((line) => line.text)
+              .join("\n");
+            const before = parseOrderText(originalText),
+              after = parseOrderText(text);
+            const uncertainFields = (
+              ["price", "purchaseDate", "orderNumber"] as const
+            ).filter(
+              (field) =>
+                before[field] !== undefined &&
+                after[field] !== undefined &&
+                before[field] !== after[field],
+            );
+            const warnings = lines.some((line) => line.confidence < 65)
+              ? [
+                  "흐리거나 작게 읽힌 글자가 있어요. 상품명·금액·날짜를 원본과 확인해 주세요.",
+                ]
+              : [];
+            if (uncertainFields.length)
+              warnings.push(
+                "다시 읽은 금액·날짜·주문번호가 원래 결과와 달라 해당 항목은 자동 입력하지 않았어요. 원본을 확인해 주세요.",
+              );
             result = text.trim()
-              ? { text }
+              ? { text, warnings, uncertainFields }
               : {
                   text: "",
                   error:

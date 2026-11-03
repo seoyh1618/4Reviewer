@@ -1,6 +1,39 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseOrderDocuments, parseOrderText } from "../shared/order-ocr.mjs";
+import {
+  parseOrderDocuments,
+  parseOrderText,
+  parseRecognizedOrders,
+} from "../shared/order-ocr.mjs";
+
+test("conflicting recognition passes cannot apply a plausible but disputed number or date", () => {
+  const page = {
+    text: "상품명 머그\n주문일 2026.11.03\n주문번호 123456\n총 결제금액 22000원",
+    uncertainFields: ["price", "purchaseDate", "orderNumber"],
+    warnings: ["원본 확인"],
+  };
+  const parsed = parseRecognizedOrders([page, page]);
+  assert.deepEqual(parsed.fields, { name: "머그" });
+  assert.deepEqual(parsed.warnings, ["원본 확인"]);
+  // Editing the transcript explicitly clears recognition metadata in the UI.
+  assert.equal(
+    parseRecognizedOrders([{ text: page.text }]).fields.price,
+    22000,
+  );
+});
+
+test("spaced OCR labels and thousands separators are normalized without rewriting names", () => {
+  const result = parseOrderText(
+    "네이버 주문상세\n주 문 일 시 : 2026. 11. 03\n상 품 명 : 리빙 MUG 2.0\n판 매 처 리빙 스토어\n총 결 제 금 액 : 22, 000 원",
+  );
+  assert.equal(result.name, "리빙 MUG 2.0");
+  assert.equal(result.seller, "리빙 스토어");
+  assert.equal(result.purchaseDate, "2026-11-03");
+  assert.equal(result.price, 22000);
+  assert.equal(parseOrderText("총 결제액 22 000원").price, 22000);
+  for (const invalid of ["22 00원", "22,OOO원", "22,000 3000원", "-22000원"])
+    assert.equal(parseOrderText(`총 결제금액 ${invalid}`).price, undefined);
+});
 
 test("multiple screenshots combine metadata and final payment without summing repeated totals", () => {
   const top =
