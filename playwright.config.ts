@@ -19,6 +19,7 @@ export default defineConfig({
         "**/mobile-review-form.spec.ts",
         "**/order-ocr.spec.ts",
         "**/registration-defaults.spec.ts",
+        "**/recovery.spec.ts",
       ],
       use: { browserName: "webkit" },
     },

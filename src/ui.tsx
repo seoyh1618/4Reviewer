@@ -83,6 +83,7 @@ export function Modal({
   onClose,
   wide = false,
   className = "",
+  dismissible = true,
 }: {
   title: string;
   subtitle?: string;
@@ -90,11 +91,14 @@ export function Modal({
   onClose: () => void;
   wide?: boolean;
   className?: string;
+  dismissible?: boolean;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const id = useId();
   const closeRef = useRef(onClose);
-  closeRef.current = onClose;
+  closeRef.current = () => {
+    if (dismissible) onClose();
+  };
   useEffect(() => {
     const dialog = ref.current;
     const focus = document.activeElement as HTMLElement;
@@ -127,7 +131,7 @@ export function Modal({
             e.clientY < r.top ||
             e.clientY > r.bottom
           )
-            onClose();
+            closeRef.current();
         }
       }}
     >
@@ -136,7 +140,12 @@ export function Modal({
           <h2 id={id}>{title}</h2>
           {subtitle && <p>{subtitle}</p>}
         </div>
-        <button className="icon-button" aria-label="닫기" onClick={onClose}>
+        <button
+          className="icon-button"
+          aria-label="닫기"
+          disabled={!dismissible}
+          onClick={() => closeRef.current()}
+        >
           <X size={20} />
         </button>
       </div>

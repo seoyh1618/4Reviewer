@@ -51,8 +51,18 @@ try {
         "utf8",
       ),
     );
+  const recovery = await client.query(
+    "SELECT version FROM schema_migrations WHERE version=5",
+  );
+  if (!recovery.rowCount)
+    await client.query(
+      await readFile(
+        new URL("./migrations/005-account-recovery.sql", import.meta.url),
+        "utf8",
+      ),
+    );
   await client.query("COMMIT");
-  console.log("Database schema ready: version 4");
+  console.log("Database schema ready: version 5");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;

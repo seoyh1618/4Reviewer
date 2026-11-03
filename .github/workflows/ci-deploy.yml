@@ -48,6 +48,7 @@ jobs:
           GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA reviewer TO reviewer_app;
           GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA reviewer TO reviewer_app;
           REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON reviewer.review_history,reviewer.payment_history FROM reviewer_app;
+          REVOKE UPDATE,DELETE,TRUNCATE ON reviewer.account_security_events FROM reviewer_app;
           SQL
       - run: npm test
         env:
@@ -65,6 +66,10 @@ jobs:
           DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
       - name: Multi-image OCR on Chrome and WebKit
         run: npx playwright test tests/e2e/order-ocr.spec.ts
+        env:
+          DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+      - name: Account recovery on Chrome and WebKit
+        run: npx playwright test tests/e2e/recovery.spec.ts
         env:
           DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
   deploy:

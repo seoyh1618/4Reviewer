@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Auth from "./Auth";
 import UsernameForm from "./UsernameForm";
+import { RecoverySettingsForm } from "./Recovery";
 import RegistrationDefaultsForm from "./RegistrationDefaultsForm";
 import { PwaInstallButton } from "./PwaInstall";
 import Dashboard from "./Dashboard";
@@ -685,6 +686,7 @@ export default function App() {
               }
             />
             <RegistrationDefaultsForm />
+            <RecoverySettingsForm />
             <div className="account-info">
               <ShieldCheck size={22} />
               <div>

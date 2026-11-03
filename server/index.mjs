@@ -2,14 +2,19 @@ import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { openDatabase } from "./database.mjs";
+import { randomBytes, randomUUID } from "node:crypto";
 import {
-  randomBytes,
-  randomUUID,
-  scrypt,
-  timingSafeEqual,
-  createHash,
-} from "node:crypto";
-import { promisify } from "node:util";
+  hashSecret,
+  hashToken,
+  passwordMatches,
+  lockedUser,
+} from "./credentials.mjs";
+import {
+  registerRecoveryRoutes,
+  recoverySetupSchema,
+  validRecoveryAnswer,
+  saveRecovery,
+} from "./recovery.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { z } from "zod";
@@ -24,8 +29,6 @@ import {
 } from "../shared/auth.mjs";
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const db = await openDatabase();
-const hashToken = (token) => createHash("sha256").update(token).digest("hex");
-const scryptAsync = promisify(scrypt);
 const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", Number(process.env.TRUST_PROXY || 0));
@@ -112,14 +115,22 @@ app.use("/api", async (req, res, next) => {
 });
 async function setSession(req, res, user) {
   const old = cookieToken(req);
-  if (old)
-    await db.prepare("DELETE FROM sessions WHERE token=?").run(hashToken(old));
   const token = randomBytes(32).toString("hex");
   const persistent = req.body?.remember !== false;
   const ttl = persistent ? 7 * 86400000 : 86400000;
-  await db
-    .prepare("INSERT INTO sessions (token,user_id,expires_at) VALUES (?,?,?)")
-    .run(hashToken(token), user.id, Date.now() + ttl);
+  const created = await db.transaction(async () => {
+    const current = await lockedUser(db, user.id);
+    if (!current || current.password !== user.password) return false;
+    if (old)
+      await db
+        .prepare("DELETE FROM sessions WHERE token=?")
+        .run(hashToken(old));
+    await db
+      .prepare("INSERT INTO sessions (token,user_id,expires_at) VALUES (?,?,?)")
+      .run(hashToken(token), user.id, Date.now() + ttl);
+    return true;
+  });
+  if (!created) return false;
   res.cookie("reviewer_session", token, {
     httpOnly: true,
     sameSite: "lax",
@@ -127,6 +138,7 @@ async function setSession(req, res, user) {
     ...(persistent ? { maxAge: ttl } : {}),
     path: "/",
   });
+  return true;
 }
 const usernameSchema = z
   .string()
@@ -161,6 +173,19 @@ app.post("/api/auth/signup", async (req, res) => {
           : "올바른 이메일 또는 아이디를 입력해 주세요.",
     });
   const { email = null, password, username = null } = parsed.data;
+  const recovery =
+    req.body.recovery === undefined
+      ? null
+      : recoverySetupSchema.safeParse(req.body.recovery);
+  if (
+    recovery &&
+    (!recovery.success ||
+      !validRecoveryAnswer(recovery.data, { email, username }, password))
+  )
+    return res.status(400).json({
+      error:
+        "복구 질문과 답변을 확인해 주세요. 답변은 4~128자로 두 번 동일하게, 계정·비밀번호와 다르게 입력해 주세요.",
+    });
   if (
     email &&
     (await db.prepare("SELECT id FROM users WHERE email=?").get(email))
@@ -177,23 +202,31 @@ app.post("/api/auth/signup", async (req, res) => {
     return res.status(409).json({
       error: "이미 사용 중인 아이디입니다. 다른 아이디를 입력해 주세요.",
     });
-  const salt = randomBytes(16).toString("hex");
-  const key = await scryptAsync(password, salt, 64);
-  const user = { id: randomUUID(), email, username };
+  const user = {
+    id: randomUUID(),
+    email,
+    username,
+    password: await hashSecret(password),
+  };
+  let recoveryCode;
   try {
-    await db
-      .prepare(
-        "INSERT INTO users (id,email,username,name,password,is_demo,created_at) VALUES(?,?,?,?,?,?,?)",
-      )
-      .run(
-        user.id,
-        email,
-        username,
-        "",
-        `${salt}:${key.toString("hex")}`,
-        0,
-        new Date().toISOString(),
-      );
+    await db.transaction(async () => {
+      await db
+        .prepare(
+          "INSERT INTO users (id,email,username,name,password,is_demo,created_at) VALUES(?,?,?,?,?,?,?)",
+        )
+        .run(
+          user.id,
+          email,
+          username,
+          "",
+          user.password,
+          0,
+          new Date().toISOString(),
+        );
+      if (recovery?.success)
+        recoveryCode = await saveRecovery(db, user.id, recovery.data);
+    });
   } catch (e) {
     if (uniqueViolation(e))
       return res
@@ -202,17 +235,11 @@ app.post("/api/auth/signup", async (req, res) => {
     throw e;
   }
   await setSession(req, res, user);
-  res.status(201).json({ user: publicUser(user) });
+  res.status(201).json({
+    user: publicUser(user),
+    ...(recoveryCode ? { recoveryCode } : {}),
+  });
 });
-const dummySalt = randomBytes(16).toString("hex");
-const dummyKey = randomBytes(64);
-async function passwordMatches(password, user) {
-  const [salt, key] = user
-    ? user.password.split(":")
-    : [dummySalt, dummyKey.toString("hex")];
-  const submitted = await scryptAsync(password, salt, 64);
-  return timingSafeEqual(submitted, Buffer.from(key, "hex")) && !!user;
-}
 const loginSchema = z.object({
   identifier: z
     .string()
@@ -244,7 +271,10 @@ app.post("/api/auth/login", async (req, res) => {
       error:
         "로그인 정보가 일치하지 않습니다. 이메일 또는 아이디와 비밀번호를 확인해 주세요.",
     });
-  await setSession(req, res, user);
+  if (!(await setSession(req, res, user)))
+    return res
+      .status(401)
+      .json({ error: "비밀번호가 변경되었습니다. 다시 로그인해 주세요." });
   res.json({ user: publicUser(user) });
 });
 app.post("/api/auth/logout", async (req, res) => {
@@ -274,14 +304,24 @@ app.patch("/api/auth/username", async (req, res) => {
     return res
       .status(400)
       .json({ error: "아이디 형식과 현재 비밀번호를 확인해 주세요." });
-  if (!(await passwordMatches(parsed.data.currentPassword, req.user)))
-    return res
-      .status(401)
-      .json({ error: "현재 비밀번호가 일치하지 않습니다." });
   try {
-    await db
-      .prepare("UPDATE users SET username=? WHERE id=?")
-      .run(parsed.data.username, req.user.id);
+    const changed = await db.transaction(async () => {
+      const current = await lockedUser(db, req.user.id);
+      if (
+        !current ||
+        current.password !== req.user.password ||
+        !(await passwordMatches(parsed.data.currentPassword, current))
+      )
+        return false;
+      await db
+        .prepare("UPDATE users SET username=? WHERE id=?")
+        .run(parsed.data.username, current.id);
+      return true;
+    });
+    if (!changed)
+      return res
+        .status(401)
+        .json({ error: "현재 비밀번호가 일치하지 않습니다." });
   } catch (error) {
     if (uniqueViolation(error))
       return res.status(409).json({
@@ -293,6 +333,7 @@ app.patch("/api/auth/username", async (req, res) => {
     user: publicUser({ ...req.user, username: parsed.data.username }),
   });
 });
+registerRecoveryRoutes(app, db);
 app.use("/api/auth", async (_req, res) =>
   res.status(404).json({ error: "요청한 기능을 찾을 수 없습니다." }),
 );

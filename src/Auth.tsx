@@ -11,6 +11,11 @@ import {
 } from "lucide-react";
 import { api } from "./lib";
 import { Button } from "./ui";
+import {
+  RecoveryFields,
+  RecoveryCodeDialog,
+  ForgotPasswordModal,
+} from "./Recovery";
 import type { User } from "./types";
 import {
   usernamePattern,
@@ -27,13 +32,19 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
     [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [remember, setRemember] = useState(true);
+  const [setupRecovery, setSetupRecovery] = useState(false);
+  const [forgot, setForgot] = useState(false);
+  const [created, setCreated] = useState<{
+    user: User;
+    recoveryCode: string;
+  } | null>(null);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setBusy(true);
     const f = new FormData(e.currentTarget);
     try {
-      const r = await api<{ user: User }>(
+      const r = await api<{ user: User; recoveryCode?: string }>(
         signup ? "/auth/signup" : "/auth/login",
         "POST",
         {
@@ -42,12 +53,23 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
             ? {
                 [signupMethod]: f.get(signupMethod),
                 signupCode: f.get("signupCode"),
+                ...(setupRecovery
+                  ? {
+                      recovery: {
+                        questionId: f.get("questionId"),
+                        answer: f.get("answer"),
+                        answerConfirmation: f.get("answerConfirmation"),
+                      },
+                    }
+                  : {}),
               }
             : { identifier: f.get("identifier") }),
           remember,
         },
       );
-      onAuth(r.user);
+      if (r.recoveryCode)
+        setCreated({ user: r.user, recoveryCode: r.recoveryCode });
+      else onAuth(r.user);
     } catch (e) {
       setError((e as Error).message);
     } finally {
@@ -201,14 +223,37 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
             </label>
           )}
           {!signup && (
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              로그인 상태 유지
-            </label>
+            <div className="auth-options">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={remember}
+                  onChange={(e) => setRemember(e.target.checked)}
+                />
+                로그인 상태 유지
+              </label>
+              <button
+                type="button"
+                className="forgot-password"
+                disabled={busy}
+                onClick={() => setForgot(true)}
+              >
+                비밀번호 찾기
+              </button>
+            </div>
+          )}
+          {signup && (
+            <>
+              <label className="signup-recovery-toggle">
+                <input
+                  type="checkbox"
+                  checked={setupRecovery}
+                  onChange={(e) => setSetupRecovery(e.target.checked)}
+                />
+                비밀번호 복구 수단 등록 (선택)
+              </label>
+              {setupRecovery && <RecoveryFields confirm />}
+            </>
           )}
           <Button
             variant="primary"
@@ -238,6 +283,16 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
         For Reviewer <span>·</span> Your reviews, beautifully organized.
         <span>·</span> <a href="/about.html">포리뷰어 소개</a>
       </footer>
+      {forgot && <ForgotPasswordModal onClose={() => setForgot(false)} />}
+      {created && (
+        <RecoveryCodeDialog
+          code={created.recoveryCode}
+          onDone={() => {
+            onAuth(created.user);
+            setCreated(null);
+          }}
+        />
+      )}
     </main>
   );
 }
