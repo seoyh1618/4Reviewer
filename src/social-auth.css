@@ -1,0 +1,240 @@
+.social-login {
+  margin-top: 14px;
+  min-width: 0;
+}
+.social-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+.social-divider::before,
+.social-divider::after {
+  content: "";
+  height: 1px;
+  background: #e2e8f0;
+  flex: 1;
+}
+.social-buttons {
+  display: flex;
+  gap: 8px;
+}
+.social-button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 13px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+.social-button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.social-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 3px;
+}
+.social-button svg,
+.social-mark svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.social-google {
+  background: #fff;
+  color: #1f1f1f;
+}
+.social-kakao {
+  background: #fee500;
+  color: #191919;
+  border-color: #fee500;
+}
+.social-naver {
+  background: #03c75a;
+  color: #fff;
+  border-color: #03c75a;
+}
+.social-error {
+  margin-top: 12px;
+}
+.social-settings {
+  margin: 22px 0;
+  border-top: 1px solid #e2e8f0;
+  padding-top: 20px;
+}
+.social-settings > h4 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+.social-settings > p {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.6;
+}
+.social-account-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid #edf0f4;
+  padding: 10px 0;
+  font-size: 13px;
+}
+.social-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+}
+.social-linked {
+  margin-left: auto;
+  color: #64748b;
+  font-size: 12px;
+}
+.social-action-form,
+.social-password-form,
+.social-signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.social-action-form,
+.social-password-form {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+.social-action-form label,
+.social-password-form label,
+.social-signup-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.social-action-form input,
+.social-password-form input,
+.social-signup-form input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.social-action-form > div {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.social-signup-form p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: #64748b;
+}
+.social-reauth {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 12px;
+}
+.social-reauth p {
+  flex-basis: 100%;
+}
+@media (max-width: 600px) {
+  .auth-card:has(.social-login) {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+  .auth-card:has(.social-login) .auth-heading {
+    margin-bottom: 8px;
+  }
+  .auth-card:has(.social-login) .orbit {
+    margin-bottom: 10px;
+  }
+  .auth-card:has(.social-login) .auth-switch {
+    margin-top: 2px;
+  }
+  .auth-card:has(.social-login) .auth-note {
+    display: none;
+  }
+  .social-login {
+    margin-top: 10px;
+  }
+  .social-button {
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: 12px;
+    gap: 6px;
+  }
+  .social-signup-form input,
+  .social-password-form input,
+  .social-action-form input {
+    font-size: 16px;
+  }
+}
+@media (min-width: 601px) and (max-width: 950px) and (max-height: 500px) {
+  .auth-card:has(.social-login) {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .auth-card:has(.social-login) .auth-heading {
+    margin-bottom: 6px;
+  }
+  .auth-card:has(.social-login) .auth-switch {
+    margin-top: 0;
+  }
+  .social-login {
+    margin-top: 6px;
+  }
+  .social-divider {
+    margin-bottom: 6px;
+  }
+  .social-button {
+    min-height: 38px;
+    padding: 8px 10px;
+  }
+}
+
+/* Equal prominence, official Google icon-only button; accessible names retain the action. */
+.social-buttons {
+  justify-content: center;
+  gap: 18px;
+}
+.social-button {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+}
+.social-button.social-google {
+  border: 0;
+  border-radius: 4px;
+  padding: 0;
+}
+.social-button img {
+  width: 44px;
+  height: 44px;
+  display: block;
+}
+.social-mark img {
+  width: 32px;
+  height: 32px;
+  display: block;
+}

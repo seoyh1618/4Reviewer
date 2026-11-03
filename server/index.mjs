@@ -1,8 +1,10 @@
 import express from "express";
+import { registerSocialRoutes } from "./social-auth.mjs";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { openDatabase } from "./database.mjs";
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
+import { cookieToken, publicUser, sessionHandlers } from "./sessions.mjs";
 import {
   hashSecret,
   hashToken,
@@ -90,56 +92,8 @@ app.use(
     message: { error: "로그인 시도가 많습니다. 15분 후 다시 시도해 주세요." },
   }),
 );
-function cookieToken(req) {
-  const c = (req.headers.cookie || "")
-    .split(";")
-    .find((c) => c.trim().startsWith("reviewer_session="));
-  return c ? c.trim().slice("reviewer_session=".length) : "";
-}
-const publicUser = (u) => ({
-  id: u.id,
-  email: u.email || null,
-  username: u.username || null,
-});
-app.use("/api", async (req, res, next) => {
-  const token = cookieToken(req);
-  if (token) {
-    const u = await db
-      .prepare(
-        "SELECT users.* FROM sessions JOIN users ON users.id=sessions.user_id WHERE token=? AND expires_at>? AND users.is_demo=0",
-      )
-      .get(hashToken(token), Date.now());
-    if (u) req.user = u;
-  }
-  next();
-});
-async function setSession(req, res, user) {
-  const old = cookieToken(req);
-  const token = randomBytes(32).toString("hex");
-  const persistent = req.body?.remember !== false;
-  const ttl = persistent ? 7 * 86400000 : 86400000;
-  const created = await db.transaction(async () => {
-    const current = await lockedUser(db, user.id);
-    if (!current || current.password !== user.password) return false;
-    if (old)
-      await db
-        .prepare("DELETE FROM sessions WHERE token=?")
-        .run(hashToken(old));
-    await db
-      .prepare("INSERT INTO sessions (token,user_id,expires_at) VALUES (?,?,?)")
-      .run(hashToken(token), user.id, Date.now() + ttl);
-    return true;
-  });
-  if (!created) return false;
-  res.cookie("reviewer_session", token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.COOKIE_SECURE === "true",
-    ...(persistent ? { maxAge: ttl } : {}),
-    path: "/",
-  });
-  return true;
-}
+const { readSession, setSession } = sessionHandlers(db);
+app.use("/api", readSession);
 const usernameSchema = z
   .string()
   .trim()
@@ -334,6 +288,7 @@ app.patch("/api/auth/username", async (req, res) => {
   });
 });
 registerRecoveryRoutes(app, db);
+registerSocialRoutes(app, db, { setSession, cookieToken, publicUser });
 app.use("/api/auth", async (_req, res) =>
   res.status(404).json({ error: "요청한 기능을 찾을 수 없습니다." }),
 );

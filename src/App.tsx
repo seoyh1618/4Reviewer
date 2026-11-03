@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import Auth from "./Auth";
 import UsernameForm from "./UsernameForm";
+import { SocialAccountSettings, socialReturn } from "./SocialAuth";
 import { RecoverySettingsForm } from "./Recovery";
 import RegistrationDefaultsForm from "./RegistrationDefaultsForm";
 import { PwaInstallButton } from "./PwaInstall";
@@ -143,6 +144,13 @@ export default function App() {
     try {
       const r = await api<{ user: User | null }>("/auth/me");
       setUser(r.user);
+      if (
+        r.user &&
+        ["linked", "verified", "failed", "cancelled"].includes(
+          socialReturn || "",
+        )
+      )
+        setAccount(true);
     } catch (e) {
       setAuthError((e as Error).message);
     } finally {
@@ -677,16 +685,18 @@ export default function App() {
             </span>
             <h3>내 계정</h3>
             <p>{user.email || user.username}</p>
-            <UsernameForm
-              user={user}
-              onSave={(updated) =>
-                setUser((current) =>
-                  current?.id === updated.id ? updated : current,
-                )
-              }
-            />
+            <SocialAccountSettings>
+              <UsernameForm
+                user={user}
+                onSave={(updated) =>
+                  setUser((current) =>
+                    current?.id === updated.id ? updated : current,
+                  )
+                }
+              />
+              <RecoverySettingsForm />
+            </SocialAccountSettings>
             <RegistrationDefaultsForm />
-            <RecoverySettingsForm />
             <div className="account-info">
               <ShieldCheck size={22} />
               <div>

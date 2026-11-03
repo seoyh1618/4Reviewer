@@ -80,6 +80,8 @@ Lightsail 방화벽에는 TCP 55432를 **승인된 관리 PC의 공인 IPv4 /32�
 - `account_security_events`: 복구 수단 등록/변경(`recovery_setup`)과 비밀번호 재설정(`password_reset`) 시각. 비밀값 원문을 기록하지 않으며 앱은 추가/조회, DBeaver는 조회만 가능.
 - `schema_migrations`: 적용한 DB 버전.
 
+DB 버전 6에는 `social_identities`(소셜 계정 연결), `social_auth_events`(소셜 인증 이력), `oauth_flows`(단기 인증 진행 상태)가 추가된다. 제공자 설정과 공개 전 검증은 [소셜 로그인 운영](SOCIAL-LOGIN.md)을 참고한다. DBeaver에서는 연결·이력 테이블을 조회할 수 있으며 단기 인증 비밀값에는 접근하지 않는다.
+
 상품·입금 이력 테이블은 앱 및 DBeaver 계정에서 조회만 가능하고 DB 트리거로 저장한다. 상품 삭제 시 유지되며, 회원 영구 삭제 시에는 개인정보 이력도 함께 제거한다. DBeaver의 reviewer 스키마에서 Tables/Views를 새로고침한다. [조회 가이드](REVIEW-DATA.md)와 [SQL 예제](REVIEW-DATA.sql)를 참고한다.
 
 모든 API는 로그인 사용자 범위로 조회·변경하고 버전을 조건으로 원자적 갱신한다. 입금·리뷰·변경 기록은 같은 트랜잭션으로 저장한다. OCR 이미지는 브라우저에서만 처리한다. 운영 로그에 요청 본문·쿠키·연락처를 남기지 않는다.

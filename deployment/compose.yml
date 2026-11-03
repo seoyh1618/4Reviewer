@@ -56,6 +56,12 @@ services:
       APP_ORIGIN: ${APP_ORIGIN:?required}
       APP_REVISION: ${APP_REVISION:-initial}
       SIGNUP_CODE: ${SIGNUP_CODE:?required}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID:-}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
+      NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
+      NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
     depends_on:
       postgres: {condition: service_healthy}
     networks: [database, web]

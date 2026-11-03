@@ -20,6 +20,7 @@ export default defineConfig({
         "**/order-ocr.spec.ts",
         "**/registration-defaults.spec.ts",
         "**/recovery.spec.ts",
+        "**/social-auth.spec.ts",
       ],
       use: { browserName: "webkit" },
     },

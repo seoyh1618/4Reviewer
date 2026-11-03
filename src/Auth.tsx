@@ -10,6 +10,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import { api } from "./lib";
+import { SocialLogin } from "./SocialAuth";
 import { Button } from "./ui";
 import {
   RecoveryFields,
@@ -264,6 +265,7 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
             {signup ? "계정 만들기" : "Sign in"}
           </Button>
         </form>
+        <SocialLogin remember={remember} onAuth={onAuth} />
         <p className="auth-switch">
           {signup ? "이미 계정이 있으신가요?" : "아직 계정이 없으신가요?"}{" "}
           <button
