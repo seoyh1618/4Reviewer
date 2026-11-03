@@ -41,8 +41,18 @@ try {
         "utf8",
       ),
     );
+  const defaults = await client.query(
+    "SELECT version FROM schema_migrations WHERE version=4",
+  );
+  if (!defaults.rowCount)
+    await client.query(
+      await readFile(
+        new URL("./migrations/004-registration-defaults.sql", import.meta.url),
+        "utf8",
+      ),
+    );
   await client.query("COMMIT");
-  console.log("Database schema ready: version 3");
+  console.log("Database schema ready: version 4");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;

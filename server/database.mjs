@@ -49,7 +49,7 @@ export async function openDatabase() {
       console.error("Database connection error:", error.code),
     );
     const migrated = await pool.query(
-      "SELECT version FROM schema_migrations WHERE version=3",
+      "SELECT version FROM schema_migrations WHERE version=4",
     );
     if (!migrated.rowCount) {
       await pool.end();
@@ -109,6 +109,24 @@ export async function openDatabase() {
         sqlite.exec("ROLLBACK");
         throw error;
       }
+    }
+  }
+  if (
+    !postgres &&
+    sqlite.prepare("PRAGMA user_version").get().user_version < 4
+  ) {
+    sqlite.exec("BEGIN IMMEDIATE");
+    try {
+      sqlite.exec(
+        readFileSync(
+          new URL("./sqlite-registration-defaults.sql", import.meta.url),
+          "utf8",
+        ),
+      );
+      sqlite.exec("COMMIT");
+    } catch (error) {
+      sqlite.exec("ROLLBACK");
+      throw error;
     }
   }
   const execute = (mode, sql, args) => {

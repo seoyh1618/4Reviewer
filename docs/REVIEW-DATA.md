@@ -5,6 +5,7 @@ DBeaver에서 `reviewer` 데이터베이스 → Schemas → `reviewer`를 선택
 | 위치 | 이름 | 용도 |
 |---|---|---|
 | Tables | `users` | 사용자 식별자, 아이디, 이메일 |
+| Tables | `registration_defaults` | 사용자별 상품 등록 기본정보와 자동 채움 선택 항목. `user_id`로 사용자 연결 |
 | Tables | `reviews` | 현재 상품, 구매 플랫폼·판매처, 리뷰 상태, 금액·정산일 등 |
 | Tables | `review_history` | 상품 등록·수정·리뷰 상태·정산 상태·삭제의 변경 전후 값 |
 | Tables | `payments` | 정정 사항이 반영된 현재 유효 입금 기록 |

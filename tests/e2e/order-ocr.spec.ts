@@ -185,9 +185,9 @@ test.describe("OCR failure recovery", () => {
       "찾은 정보를 채웠어요",
       { timeout: 100000 },
     );
-    await expect(dialog.getByLabel("상품명")).toHaveValue(
-      "데일리 두피 마사지기, 블루, 1세트",
-    );
+    // A retry fills untouched fields while preserving the user's own correction.
+    await expect(dialog.getByLabel("상품명")).toHaveValue("직접 입력한 상품");
+    await expect(dialog.getByLabel("구매금액")).toHaveValue("8900");
     await expect(dialog.getByRole("alert")).toHaveCount(0);
   });
 });

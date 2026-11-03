@@ -74,6 +74,7 @@ Lightsail 방화벽에는 TCP 55432를 **승인된 관리 PC의 공인 IPv4 /32�
 - `payment_history`: 입금 기록의 추가·정정·삭제 전후 금액과 날짜. 상품 삭제 후에도 보존.
 - `review_details`, `user_review_summary` 뷰: 상품 상세와 사용자별 등록/리뷰/정산 집계.
 - `review_templates`, `template_groups`: 개인별 템플릿과 그룹.
+- `registration_defaults`: 사용자별 구매 계정주, 기본 플랫폼·리뷰 타입·리뷰 가이드·리뷰비, 선택 항목, 동시 수정 버전. DB 버전 4에서 추가.
 - `schema_migrations`: 적용한 DB 버전.
 
 이력 테이블은 앱 및 DBeaver 계정에서 조회만 가능하고 DB 트리거로 저장한다. 상품 삭제 시 유지되며, 회원 영구 삭제 시에는 개인정보 이력도 함께 제거한다. DBeaver의 reviewer 스키마에서 Tables/Views를 새로고침한다. [조회 가이드](REVIEW-DATA.md)와 [SQL 예제](REVIEW-DATA.sql)를 참고한다.

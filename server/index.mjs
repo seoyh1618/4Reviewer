@@ -15,6 +15,7 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { reviewSchema, normalizeReview } from "../shared/domain.mjs";
 import { registerTemplateRoutes } from "./templates.mjs";
+import { registerRegistrationDefaultsRoutes } from "./registration-defaults.mjs";
 import {
   usernamePattern,
   usernameHelp,
@@ -307,6 +308,7 @@ app.use("/api", async (req, res, next) =>
   req.user ? next() : res.status(401).json({ error: "로그인이 필요합니다." }),
 );
 registerTemplateRoutes(app, db);
+registerRegistrationDefaultsRoutes(app, db);
 function decode(row) {
   return {
     ...normalizeReview(JSON.parse(row.data)),

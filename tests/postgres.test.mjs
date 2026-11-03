@@ -1,3 +1,4 @@
+import { checkRegistrationDefaults } from "./fixtures/registration-defaults.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -101,6 +102,7 @@ test(
       const a = await signup(true),
         b = await signup();
       assert.equal(a.body.user.email, null);
+      const savedDefaults = await checkRegistrationDefaults(req, a, b);
       assert.equal(b.body.user.username, null);
       const byId = await req("/auth/login", "POST", {
         identifier: a.body.user.username.toUpperCase(),
@@ -218,6 +220,11 @@ test(
       );
       await stop();
       await start();
+      assert.deepEqual(
+        (await req("/registration-defaults", "GET", undefined, a.cookie)).body
+          .defaults,
+        savedDefaults,
+      );
       assert.equal(
         (await req("/auth/me", "GET", undefined, a.cookie)).body.user.id,
         users[0],

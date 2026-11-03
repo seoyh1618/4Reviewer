@@ -1,0 +1,174 @@
+.registration-defaults-form {
+  text-align: left;
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.account-body .registration-defaults-form {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.registration-defaults-form header h3 {
+  font-size: 16px;
+  color: #27303e;
+  margin-bottom: 8px;
+}
+.registration-defaults-form header p,
+.defaults-help {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.defaults-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.defaults-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.defaults-field-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.defaults-field-heading > label {
+  font-size: 12px;
+}
+.defaults-field :is(input:not([type="checkbox"]), select) {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.defaults-field-heading .defaults-check,
+.defaults-choice {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  color: #526072;
+  font-size: 11px;
+  font-weight: 400;
+  min-height: 28px;
+}
+.registration-defaults-form input[type="checkbox"],
+.registration-prefill input[type="checkbox"] {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0;
+  accent-color: #64748b;
+}
+.defaults-other {
+  font-size: 11px;
+}
+.defaults-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.defaults-success {
+  color: #3b6653;
+  font-size: 12px;
+}
+.registration-prefill {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  margin-bottom: 20px;
+  min-width: 0;
+}
+.prefill-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.prefill-heading strong {
+  font-size: 13px;
+  color: #334155;
+}
+.prefill-heading .button {
+  padding: 6px 10px;
+  min-height: 34px;
+}
+.registration-prefill p {
+  font-size: 11px;
+  line-height: 1.6;
+  color: #64748b;
+  margin-top: 6px;
+}
+.registration-prefill details {
+  margin-top: 6px;
+}
+.registration-prefill summary {
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.defaults-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+.defaults-choice {
+  padding: 4px 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  min-height: 36px;
+}
+.defaults-settings-modal[open] {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.defaults-settings-modal > .modal-header,
+.defaults-settings-modal > .modal-footer {
+  flex-shrink: 0;
+  position: static;
+}
+.defaults-settings-modal > .modal-body {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 600px) {
+  .defaults-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .defaults-field-heading .defaults-check,
+  .defaults-choice {
+    min-height: 40px;
+  }
+  .defaults-field :is(input:not([type="checkbox"]), select) {
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .registration-prefill {
+    padding: 10px 12px;
+  }
+  .defaults-settings-modal .modal-body {
+    padding: 18px;
+  }
+  .defaults-actions {
+    flex-wrap: wrap;
+  }
+}

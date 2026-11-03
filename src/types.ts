@@ -36,6 +36,18 @@ export type User = {
   email: string | null;
   username: string | null;
 };
+export type RegistrationDefaultKey =
+  | "purchaser"
+  | "platform"
+  | "shippingMethod"
+  | "reviewType"
+  | "additionalReviewFee";
+export type RegistrationDefaults = {
+  values: Pick<ReviewInput, RegistrationDefaultKey | "platformOther">;
+  enabledFields: RegistrationDefaultKey[];
+  version: number;
+  updatedAt: string | null;
+};
 export type Activity = {
   id: string;
   reviewId: string;

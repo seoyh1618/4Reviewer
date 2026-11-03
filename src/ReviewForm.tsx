@@ -1,12 +1,18 @@
 import {
   useState,
-  useRef,
+  useEffect,
   useId,
   type FormEvent,
   type ComponentProps,
 } from "react";
 import { ImagePlus } from "lucide-react";
 import OrderImport from "./OrderImport";
+import RegistrationDefaultsForm from "./RegistrationDefaultsForm";
+import {
+  composeRegistrationInput,
+  selectedRegistrationDefaults,
+  registrationFields,
+} from "../shared/registration-defaults.mjs";
 import {
   platforms,
   shippingMethods,
@@ -16,9 +22,14 @@ import {
   expectedSettlement,
   normalizePayback,
 } from "../shared/domain.mjs";
-import { emptyReview, won } from "./lib";
+import { api, emptyReview, won } from "./lib";
 import { Modal, Button, PaybackBadge } from "./ui";
-import type { Review, ReviewInput } from "./types";
+import type {
+  Review,
+  ReviewInput,
+  RegistrationDefaults,
+  RegistrationDefaultKey,
+} from "./types";
 
 function DateField(props: Omit<ComponentProps<"input">, "type">) {
   return (
@@ -39,44 +50,56 @@ export default function ReviewForm({
   onSave: (data: ReviewInput) => Promise<void>;
   startOcr?: boolean;
 }) {
-  const [data, setData] = useState<ReviewInput>(
-      () => normalizePayback(item || emptyReview()) as ReviewInput,
-    ),
-    [error, setError] = useState(""),
+  const [baseData] = useState<ReviewInput>(
+    () => normalizePayback(item || emptyReview()) as ReviewInput,
+  );
+  const [manualFields, setManualFields] = useState<Partial<ReviewInput>>({});
+  const [ocrFields, setOcrFields] = useState<Partial<ReviewInput>>({});
+  const [defaults, setDefaults] = useState<RegistrationDefaults | null>(null);
+  const [activeFields, setActiveFields] = useState<RegistrationDefaultKey[]>(
+    [],
+  );
+  const [defaultsLoading, setDefaultsLoading] = useState(!item);
+  const [defaultsError, setDefaultsError] = useState("");
+  const [showDefaults, setShowDefaults] = useState(false);
+  const [defaultsPending, setDefaultsPending] = useState(true);
+  const defaultsFormId = useId();
+  const [error, setError] = useState(""),
     [saving, setSaving] = useState(false),
     [ocrBusy, setOcrBusy] = useState(false);
-  const previousOcr = useRef<Record<string, unknown>>({}),
-    beforeOcr = useRef<Record<string, unknown>>({});
+  useEffect(() => {
+    if (item) return;
+    let cancelled = false;
+    void api<{ defaults: RegistrationDefaults }>("/registration-defaults")
+      .then(({ defaults }) => {
+        if (cancelled) return;
+        setDefaults(defaults);
+        setActiveFields(defaults.enabledFields);
+      })
+      .catch((e) => {
+        if (!cancelled) setDefaultsError((e as Error).message);
+      })
+      .finally(() => {
+        if (!cancelled) setDefaultsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [item]);
+  const data = composeRegistrationInput(
+    baseData,
+    item ? {} : selectedRegistrationDefaults(defaults, activeFields),
+    ocrFields,
+    manualFields,
+  ) as ReviewInput;
   const dueDateHelpId = useId(),
     kakaoNameHelpId = useId(),
     paybackHelpId = useId(),
     reviewFeeHelpId = useId();
   const update = <K extends keyof ReviewInput>(key: K, value: ReviewInput[K]) =>
-    setData(
-      (d) =>
-        normalizePayback({
-          ...d,
-          [key]: value,
-        }) as ReviewInput,
-    );
+    setManualFields((current) => ({ ...current, [key]: value }));
   function applyOcr(fields: Partial<ReviewInput>) {
-    const previous = previousOcr.current;
-    previousOcr.current = fields;
-    setData((current) => {
-      const next = { ...current } as unknown as Record<string, unknown>;
-      for (const [key, value] of Object.entries(previous)) {
-        if (next[key] === value) next[key] = beforeOcr.current[key];
-      }
-      for (const [key, value] of Object.entries(fields)) {
-        if (
-          !(key in previous) ||
-          (current as unknown as Record<string, unknown>)[key] !== previous[key]
-        )
-          beforeOcr.current[key] = next[key];
-        next[key] = value;
-      }
-      return normalizePayback(next) as ReviewInput;
-    });
+    setOcrFields(fields);
   }
   async function submit(e: FormEvent) {
     e.preventDefault();
@@ -124,6 +147,74 @@ export default function ReviewForm({
               onBusy={setOcrBusy}
             />
           )}
+          {!item && (
+            <section
+              className="registration-prefill"
+              aria-label="내 기본정보 자동 채움"
+            >
+              <div className="prefill-heading">
+                <strong>내 기본정보</strong>
+                <Button
+                  type="button"
+                  disabled={defaultsLoading || saving || ocrBusy}
+                  onClick={() => setShowDefaults(true)}
+                >
+                  기본정보 설정
+                </Button>
+              </div>
+              {defaultsLoading ? (
+                <p role="status">기본정보를 불러오는 중…</p>
+              ) : defaultsError ? (
+                <p role="alert">
+                  기본정보를 불러오지 못했어요. 직접 입력하거나 설정에서 다시
+                  불러오세요.
+                </p>
+              ) : defaults && defaults.version > 0 ? (
+                <>
+                  <details>
+                    <summary>
+                      이번 상품에 자동 채움 · {activeFields.length}개 항목
+                    </summary>
+                    <div className="defaults-choices">
+                      {registrationFields.map(({ key: fieldKey, label }) => {
+                        const key = fieldKey as RegistrationDefaultKey;
+                        const available =
+                          key === "purchaser"
+                            ? !!defaults.values.purchaser
+                            : key === "platform" &&
+                                defaults.values.platform === "기타"
+                              ? !!defaults.values.platformOther
+                              : true;
+                        return (
+                          <label className="defaults-choice" key={key}>
+                            <input
+                              type="checkbox"
+                              aria-label={`이번 상품 ${label} 자동 채움`}
+                              disabled={!available || saving || ocrBusy}
+                              checked={activeFields.includes(key)}
+                              onChange={(e) =>
+                                setActiveFields((current) =>
+                                  e.target.checked
+                                    ? [...current, key]
+                                    : current.filter((field) => field !== key),
+                                )
+                              }
+                            />
+                            {label}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </details>
+                  <p>직접 입력한 값과 주문 이미지에서 읽은 값을 우선해요.</p>
+                </>
+              ) : (
+                <p>
+                  자주 쓰는 계정주와 리뷰 조건을 저장해 자동으로 채워 보세요.
+                </p>
+              )}
+            </section>
+          )}
           <div className="form-section-heading">
             <span>01</span>
             <h3>상품 정보</h3>
@@ -155,11 +246,11 @@ export default function ReviewForm({
               <select
                 value={data.platform}
                 onChange={(e) =>
-                  setData((d) => ({
-                    ...d,
+                  setManualFields((current) => ({
+                    ...current,
                     platform: e.target.value,
                     platformOther:
-                      e.target.value === "기타" ? d.platformOther : "",
+                      e.target.value === "기타" ? data.platformOther : "",
                   }))
                 }
               >
@@ -319,11 +410,11 @@ export default function ReviewForm({
                     value={data.reviewStatus}
                     onChange={(e) => {
                       const status = e.target.value as "todo" | "done";
-                      setData((d) => ({
-                        ...d,
+                      setManualFields((current) => ({
+                        ...current,
                         reviewStatus: status,
                         reviewedAt:
-                          status === "done" ? d.reviewedAt || today() : "",
+                          status === "done" ? data.reviewedAt || today() : "",
                       }));
                     }}
                   >
@@ -495,12 +586,46 @@ export default function ReviewForm({
             variant="primary"
             type="submit"
             busy={saving}
-            disabled={ocrBusy}
+            disabled={ocrBusy || defaultsLoading}
           >
             {item ? "변경사항 저장" : "상품 등록하기"}
           </Button>
         </div>
       </form>
+      {showDefaults && (
+        <Modal
+          title="상품 등록 기본정보"
+          className="defaults-settings-modal"
+          onClose={() => setShowDefaults(false)}
+        >
+          <div className="modal-body">
+            <RegistrationDefaultsForm
+              formId={defaultsFormId}
+              onPendingChange={setDefaultsPending}
+              onSaved={(saved) => {
+                setDefaults(saved);
+                setActiveFields(saved.enabledFields);
+                setDefaultsError("");
+                setShowDefaults(false);
+              }}
+            />
+          </div>
+          <div className="modal-footer">
+            <Button type="button" onClick={() => setShowDefaults(false)}>
+              닫기
+            </Button>
+            <span className="footer-spacer" />
+            <Button
+              type="submit"
+              form={defaultsFormId}
+              variant="primary"
+              busy={defaultsPending}
+            >
+              기본정보 저장
+            </Button>
+          </div>
+        </Modal>
+      )}
     </Modal>
   );
 }

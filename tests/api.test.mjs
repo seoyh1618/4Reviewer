@@ -1,3 +1,4 @@
+import { checkRegistrationDefaults } from "./fixtures/registration-defaults.mjs";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -124,6 +125,7 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
       signupCode: "3333",
     });
     assert.equal(b.status, 201);
+    const savedDefaults = await checkRegistrationDefaults(request, a, b);
     assert.equal((await request("/templates")).status, 401);
     assert.equal(
       (await request("/template-groups", "POST", { name: "식품" })).status,
@@ -436,6 +438,11 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
     );
     await stop();
     await start();
+    assert.deepEqual(
+      (await request("/registration-defaults", "GET", undefined, a.cookie)).body
+        .defaults,
+      savedDefaults,
+    );
     const persistedTemplates = (
       await request("/templates", "GET", undefined, a.cookie)
     ).body.templates;
