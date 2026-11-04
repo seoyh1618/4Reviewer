@@ -209,7 +209,12 @@ test.describe("mobile review form and sorting", () => {
     await dialog
       .getByRole("button", { name: "변경사항 저장", exact: true })
       .click();
-    await expect(dialog).toBeHidden();
+    await expect(
+      page.getByRole("dialog", { name: "상품 정보 수정", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("dialog", { name: "상품 상세", exact: true }),
+    ).toContainText("모바일 두 칸 수정 검증");
     const edited = await (await page.request.get("/api/reviews")).json();
     expect(edited.reviews[0]).toMatchObject({
       name: "모바일 두 칸 수정 검증",
