@@ -2264,6 +2264,11 @@ progress::-moz-progress-bar {
 .account-body .detail-fields {
   text-align: left;
 }
+.account-body > .pwa-install-entry {
+  display: flex;
+  width: fit-content;
+  margin-inline: auto;
+}
 .guide-body > div {
   display: flex;
   gap: 14px;

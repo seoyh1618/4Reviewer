@@ -42,7 +42,7 @@ import ReviewDetail from "./ReviewDetail";
 import ReviewStageForm from "./ReviewStageForm";
 import type { ReviewStage } from "./ReviewProgress";
 import { Logo, Button, Modal } from "./ui";
-import { api, won, exportCsv } from "./lib";
+import { api, won } from "./lib";
 import {
   today,
   totals,
@@ -732,12 +732,6 @@ export default function App() {
               </div>
             </dl>
             <PwaInstallButton />
-            <Button
-              className="data-export-button"
-              onClick={() => exportCsv(items)}
-            >
-              내 데이터 내보내기
-            </Button>
           </div>
           <div className="modal-footer">
             <Button variant="ghost" onClick={() => void logout()}>
