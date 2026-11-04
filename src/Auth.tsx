@@ -84,7 +84,7 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
           <p>
             {signup
               ? "Create your For Reviewer account"
-              : "Welcome to For Reviewer"}
+              : "포리뷰어 · For Reviewer"}
           </p>
         </div>
         <div className="orbit" aria-hidden="true">
@@ -268,7 +268,7 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
       </div>
       <footer className="auth-footer">
         For Reviewer <span>·</span> Your reviews, beautifully organized.
-        <span>·</span> <a href="/about.html">포리뷰어 소개</a>
+        <span>·</span> <a href="/about.html">포리뷰어 서비스</a>
       </footer>
       {forgot && <ForgotPasswordModal onClose={() => setForgot(false)} />}
       {created && (

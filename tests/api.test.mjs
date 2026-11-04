@@ -72,6 +72,11 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
   }
   try {
     await start();
+    for (const path of ["/about", "/about/", "/about?source=search"]) {
+      const response = await fetch(base + path, { redirect: "manual" });
+      assert.equal(response.status, 301);
+      assert.equal(response.headers.get("location"), "/about.html");
+    }
     assert.equal((await request("/reviews")).status, 401);
     for (const password of [undefined, "", "1234567", "a".repeat(129)]) {
       const denied = await request("/auth/signup", "POST", {

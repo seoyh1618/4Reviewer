@@ -488,6 +488,8 @@ app.delete("/api/reviews/:id", async (req, res) => {
 app.use("/api", async (_req, res) =>
   res.status(404).json({ error: "요청한 기능을 찾을 수 없습니다." }),
 );
+// Keep the public service page separate from the login SPA at its canonical URL.
+app.get(["/about", "/about/"], (_req, res) => res.redirect(301, "/about.html"));
 if (process.env.NODE_ENV === "production") {
   app.use(
     express.static(path.join(root, "dist"), {
