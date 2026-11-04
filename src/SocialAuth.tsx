@@ -17,7 +17,7 @@ const names: Record<Provider, string> = {
 function Logo({ provider }: { provider: Provider }) {
   if (provider === "google")
     return (
-      <img src="/brand/google-signin-icon.png" alt="" aria-hidden="true" />
+      <img src="/brand/google-signin-neutral-round.png" alt="" aria-hidden="true" />
     );
   if (provider === "naver")
     return (

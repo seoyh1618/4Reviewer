@@ -19,24 +19,37 @@
 }
 .social-buttons {
   display: flex;
-  gap: 8px;
+  justify-content: center;
+  gap: 18px;
 }
 .social-button {
-  flex: 1;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   min-width: 0;
-  min-height: 42px;
-  padding: 10px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
   font-family: inherit;
   font-weight: 500;
   font-size: 13px;
   line-height: 1.2;
   cursor: pointer;
+  transition: box-shadow 160ms ease, transform 160ms ease;
+}
+@media (hover: hover) {
+  .social-button:not(:disabled):hover {
+    box-shadow: 0 3px 10px rgb(15 23 42 / 10%);
+    transform: translateY(-1px);
+  }
+}
+.social-button:not(:disabled):active {
+  transform: translateY(0);
 }
 .social-button:disabled {
   opacity: 0.55;
@@ -53,18 +66,16 @@
   flex-shrink: 0;
 }
 .social-google {
-  background: #fff;
+  background: #f2f2f2;
   color: #1f1f1f;
 }
 .social-kakao {
   background: #fee500;
-  color: #191919;
-  border-color: #fee500;
+  color: #000;
 }
 .social-naver {
-  background: #03c75a;
+  background: #03a94d;
   color: #fff;
-  border-color: #03c75a;
 }
 .social-error {
   margin-top: 12px;
@@ -176,12 +187,6 @@
   .social-login {
     margin-top: 10px;
   }
-  .social-button {
-    min-height: 44px;
-    padding: 10px 8px;
-    font-size: 12px;
-    gap: 6px;
-  }
   .social-signup-form input,
   .social-password-form input,
   .social-action-form input {
@@ -205,28 +210,12 @@
   .social-divider {
     margin-bottom: 6px;
   }
-  .social-button {
-    min-height: 38px;
-    padding: 8px 10px;
-  }
 }
 
-/* Equal prominence, official Google icon-only button; accessible names retain the action. */
-.social-buttons {
-  justify-content: center;
-  gap: 18px;
-}
-.social-button {
-  flex: 0 0 44px;
-  width: 44px;
-  height: 44px;
-  min-height: 44px;
-  padding: 0;
-}
-.social-button.social-google {
-  border: 0;
-  border-radius: 4px;
-  padding: 0;
+/* Official borderless neutral artwork, unchanged; all providers have equal touch targets. */
+.social-button.social-google,
+.social-mark.social-google {
+  border-radius: 50%;
 }
 .social-button img {
   width: 44px;
@@ -237,4 +226,10 @@
   width: 32px;
   height: 32px;
   display: block;
+}
+@media (prefers-reduced-motion: reduce) {
+  .social-button {
+    transition: none;
+    transform: none !important;
+  }
 }

@@ -55,4 +55,4 @@ ORDER BY created_at DESC;
 
 공식 문서: [Google OIDC](https://developers.google.com/identity/openid-connect/openid-connect), [카카오 로그인](https://developers.kakao.com/docs/ko/kakaologin/rest-api), [카카오 무료 쿼터](https://developers.kakao.com/docs/ko/getting-started/quota), [네이버 로그인](https://developers.naver.com/docs/login/api/api.md).
 
-Google 버튼 이미지는 [공식 배포 아이콘](https://developers.google.com/identity/branding-guidelines)의 Android/Web Light Square 아이콘 전용 PNG를 원형 그대로 사용한다. 다른 제공자와 동일한 44px 클릭 영역 및 접근 가능한 로그인 이름을 제공한다.
+Google 버튼 이미지는 [공식 배포 아이콘](https://developers.google.com/identity/branding-guidelines)의 Android/Web Neutral Pill 아이콘 전용 PNG(@4x)를 수정 없이 사용한다. 연한 회색 배경의 원형이며 테두리가 없다. 모든 제공자는 동일한 44px 클릭 영역과 접근 가능한 로그인 이름을 제공한다. 카카오는 노란색(#FEE500), 네이버는 [현재 공식 지정색](https://developers.naver.com/docs/login/bi/bi.md)인 녹색(#03A94D)을 사용한다.
