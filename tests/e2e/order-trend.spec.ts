@@ -15,7 +15,6 @@ async function seed(page: Page, empty = false) {
         data: {
           email: `order-trend-${randomUUID()}@example.test`,
           password: "ReviewPass-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

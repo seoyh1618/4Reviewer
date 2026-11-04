@@ -39,7 +39,6 @@ test(
           DATABASE_URL: connectionString,
           PGSCHEMA: "reviewer",
           PORT: String(port),
-          SIGNUP_CODE: "pg-test-only",
           COOKIE_SECURE: "true",
           APP_ORIGIN: base,
         },
@@ -91,7 +90,6 @@ test(
               }
             : { email: `pg-${randomUUID()}@example.test` }),
           password: "Pass1234",
-          signupCode: "pg-test-only",
         });
         assert.equal(r.status, 201);
         users.push(r.body.user.id);

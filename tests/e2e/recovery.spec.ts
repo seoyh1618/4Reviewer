@@ -52,7 +52,6 @@ test("phone signup and question plus recovery code reset preserve the login iden
     .click();
   await page.getByLabel("아이디", { exact: true }).fill(username);
   await page.getByLabel("비밀번호", { exact: true }).fill(password);
-  await page.getByLabel("회원가입 코드", { exact: true }).fill("3333");
   await page.getByLabel("비밀번호 복구 수단 등록 (선택)").check();
   await page
     .getByLabel("인증 질문", { exact: true })
@@ -141,7 +140,6 @@ test("existing accounts can register recovery with current password on desktop a
     data: {
       email: `recovery-${randomUUID()}@example.test`,
       password,
-      signupCode: "3333",
     },
   });
   expect(account.status()).toBe(201);

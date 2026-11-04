@@ -6,7 +6,6 @@ async function signedIn(page: Page) {
     data: {
       email: `pwa-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(response.status()).toBe(201);
@@ -37,7 +36,7 @@ test("manifest, Apple icon and production worker make the app installable", asyn
     start_url: "/",
     scope: "/",
     display: "standalone",
-    short_name: "포 리뷰어",
+    short_name: "포리뷰어",
   });
   for (const [url, size] of [
     ["/icons/app-192.png", 192],
@@ -135,7 +134,7 @@ test.describe("phone installation guide", () => {
       .getByRole("button", { name: "앱 설치", exact: true })
       .click();
     const guide = page.getByRole("dialog", {
-      name: "포 리뷰어 앱 설치",
+      name: "포리뷰어 앱 설치",
       exact: true,
     });
     await expect(guide).toBeVisible();
@@ -171,7 +170,7 @@ test("browser install prompt handles cancellation, retry and actual install even
   await signedIn(page);
   await page.getByRole("button", { name: "앱 설치", exact: true }).click();
   const guide = page.getByRole("dialog", {
-    name: "포 리뷰어 앱 설치",
+    name: "포리뷰어 앱 설치",
     exact: true,
   });
   for (const outcome of ["dismissed", "accepted"] as const) {
@@ -194,7 +193,7 @@ test("browser install prompt handles cancellation, retry and actual install even
   await page.evaluate(() => window.dispatchEvent(new Event("appinstalled")));
   await expect(
     page
-      .getByRole("dialog", { name: "포 리뷰어 웹앱", exact: true })
+      .getByRole("dialog", { name: "포리뷰어 웹앱", exact: true })
       .getByRole("status"),
   ).toContainText("앱으로 사용할 준비가 됐어요");
 });

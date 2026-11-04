@@ -86,7 +86,6 @@ async function openForm(page: Page) {
     data: {
       email: `ocr-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(auth.status()).toBe(201);

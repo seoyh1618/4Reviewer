@@ -23,12 +23,14 @@ import {
   Menu,
   UserRound,
   LayoutTemplate,
+  SlidersHorizontal,
 } from "lucide-react";
 import Auth from "./Auth";
 import UsernameForm from "./UsernameForm";
 import { SocialAccountSettings, socialReturn } from "./SocialAuth";
 import { RecoverySettingsForm } from "./Recovery";
 import RegistrationDefaultsForm from "./RegistrationDefaultsForm";
+import RegistrationDefaultsPage from "./RegistrationDefaultsPage";
 import { PwaInstallButton } from "./PwaInstall";
 import Dashboard from "./Dashboard";
 import Products from "./Products";
@@ -65,6 +67,7 @@ const nav = [
   { id: "calendar" as Page, label: "리뷰 캘린더", Icon: CalendarDays },
   { id: "payback" as Page, label: "페이백", Icon: Wallet },
   { id: "insights" as Page, label: "통계", Icon: ChartNoAxesCombined },
+  { id: "defaults" as Page, label: "자동입력 설정", Icon: SlidersHorizontal },
 ];
 const defaultFilters: Filters = {
   search: "",
@@ -531,21 +534,23 @@ export default function App() {
                 timeZone: "Asia/Seoul",
               })}
             </span>
-            <button
-              className="icon-button refresh-button"
-              aria-label="새로고침"
-              onClick={refresh}
-              disabled={page === "templates" ? templatesLoading : loading}
-            >
-              <RefreshCw
-                size={18}
-                className={
-                  (page === "templates" ? templatesLoading : loading)
-                    ? "spin"
-                    : ""
-                }
-              />
-            </button>
+            {page !== "defaults" && (
+              <button
+                className="icon-button refresh-button"
+                aria-label="새로고침"
+                onClick={refresh}
+                disabled={page === "templates" ? templatesLoading : loading}
+              >
+                <RefreshCw
+                  size={18}
+                  className={
+                    (page === "templates" ? templatesLoading : loading)
+                      ? "spin"
+                      : ""
+                  }
+                />
+              </button>
+            )}
             <button
               className="icon-button notification-button"
               aria-label={`마감 확인 ${urgent}건`}
@@ -568,7 +573,8 @@ export default function App() {
           id="main"
           className={`content${page === "products" || page === "payback" ? " content--table" : ""}`}
         >
-          {((error && page !== "templates") || offline) && (
+          {((error && page !== "templates" && page !== "defaults") ||
+            offline) && (
             <div className="connection-alert" role="alert">
               <AlertCircle size={18} />
               <span>
@@ -579,7 +585,9 @@ export default function App() {
               <Button onClick={refresh}>다시 시도</Button>
             </div>
           )}
-          {page === "templates" ? (
+          {page === "defaults" ? (
+            <RegistrationDefaultsPage key={user.id} onAdd={() => setForm({})} />
+          ) : page === "templates" ? (
             <ReviewTemplates
               key={user.id}
               refreshKey={templateRefresh}
@@ -621,7 +629,7 @@ export default function App() {
           ) : (
             <Insights items={items} payments={payments} />
           )}
-          {page !== "templates" && (
+          {page !== "templates" && page !== "defaults" && (
             <div className="sync-status">
               <span className={error || offline ? "stale-dot" : "sync-dot"} />
               {synced
@@ -645,7 +653,9 @@ export default function App() {
                 ? "캘린더"
                 : id === "templates"
                   ? "템플릿"
-                  : label}
+                  : id === "defaults"
+                    ? "자동입력"
+                    : label}
             </span>
           </button>
         ))}

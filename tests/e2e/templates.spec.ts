@@ -10,7 +10,6 @@ async function openTemplates(page: Page) {
         data: {
           email: `templates-${randomUUID()}@example.test`,
           password: "TemplatePass-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

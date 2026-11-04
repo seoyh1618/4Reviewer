@@ -4,6 +4,13 @@
   gap: 16px;
   min-width: 0;
 }
+.registration-defaults-page {
+  max-width: 1000px;
+  min-width: 0;
+}
+.registration-defaults-panel {
+  padding: 24px;
+}
 .account-body .registration-defaults-form {
   margin-top: 24px;
   padding-top: 24px;
@@ -150,6 +157,13 @@
   overscroll-behavior: contain;
 }
 @media (max-width: 600px) {
+  .registration-defaults-panel {
+    padding: 18px;
+  }
+  .registration-defaults-page .page-title {
+    flex-wrap: wrap;
+    gap: 16px;
+  }
   .defaults-grid {
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;

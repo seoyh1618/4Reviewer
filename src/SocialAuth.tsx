@@ -118,7 +118,7 @@ export function SocialLogin({
       const { user } = await api<{ user: User }>(
         "/auth/social/signup",
         "POST",
-        { username: data.get("username"), signupCode: data.get("signupCode") },
+        { username: data.get("username") },
       );
       onAuth(user);
     } catch (e) {
@@ -163,8 +163,7 @@ export function SocialLogin({
           <form onSubmit={signup}>
             <div className="modal-body social-signup-form">
               <p>
-                처음 방문하셨네요. 아이디와 가입 코드를 입력하면 시작할 수
-                있어요.
+                처음 방문하셨네요. 사용할 아이디를 입력하면 시작할 수 있어요.
               </p>
               <label>
                 아이디
@@ -177,16 +176,6 @@ export function SocialLogin({
                   autoComplete="username"
                   autoCapitalize="none"
                   placeholder="영문·숫자·밑줄 4~30자"
-                />
-              </label>
-              <label>
-                회원가입 코드
-                <input
-                  name="signupCode"
-                  required
-                  maxLength={64}
-                  autoComplete="off"
-                  placeholder="전달받은 가입 코드"
                 />
               </label>
               <p className="username-help">

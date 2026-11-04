@@ -34,7 +34,7 @@ const html = `<!doctype html>
     <div class="share-copy"><h1>For Reviewer</h1><p>리뷰 관리, 정산 관리.</p></div>
     <div class="preview-browser">
       <div class="preview-toolbar">forreviwer.com</div>
-      <div class="preview-viewport"><iframe src="/" title="포 리뷰어 로그인 첫 화면"></iframe></div>
+      <div class="preview-viewport"><iframe src="/" title="포리뷰어 로그인 첫 화면"></iframe></div>
     </div>
   </main>
 </body>

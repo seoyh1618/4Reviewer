@@ -128,7 +128,7 @@ export function PwaInstallButton({
       </button>
       {open && (
         <Modal
-          title={installed ? "포 리뷰어 웹앱" : "포 리뷰어 앱 설치"}
+          title={installed ? "포리뷰어 웹앱" : "포리뷰어 앱 설치"}
           onClose={() => setOpen(false)}
           className="pwa-install-modal"
         >
@@ -136,7 +136,7 @@ export function PwaInstallButton({
             <div className="pwa-app-preview">
               <img src="/icons/app-192.png" width="56" height="56" alt="" />
               <div>
-                <strong>포 리뷰어</strong>
+                <strong>포리뷰어</strong>
                 <p>리뷰 관리, 정산 관리.</p>
               </div>
             </div>
@@ -175,7 +175,7 @@ export function PwaInstallButton({
                   </h3>
                   {isApple ? (
                     <ol>
-                      <li>Safari에서 포 리뷰어를 열어 주세요.</li>
+                      <li>Safari에서 포리뷰어를 열어 주세요.</li>
                       <li>
                         <Share size={15} aria-hidden="true" /> 공유 메뉴에서{" "}
                         <strong>홈 화면에 추가</strong>를 선택하세요.
@@ -189,8 +189,8 @@ export function PwaInstallButton({
                     <ol>
                       <li>
                         {isAndroid
-                          ? "Chrome에서 포 리뷰어를 열어 주세요."
-                          : "Chrome 또는 Edge에서 포 리뷰어를 열어 주세요."}
+                          ? "Chrome에서 포리뷰어를 열어 주세요."
+                          : "Chrome 또는 Edge에서 포리뷰어를 열어 주세요."}
                       </li>
                       <li>
                         {isAndroid
@@ -203,7 +203,7 @@ export function PwaInstallButton({
                       </li>
                       <li>
                         설치 후 {isAndroid ? "홈 화면" : "앱 목록"}의{" "}
-                        <strong>포 리뷰어</strong> 아이콘으로 시작하세요.
+                        <strong>포리뷰어</strong> 아이콘으로 시작하세요.
                       </li>
                     </ol>
                   )}

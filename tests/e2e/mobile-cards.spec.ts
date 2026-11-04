@@ -10,7 +10,6 @@ test("compact mobile cards open an overlay and keep status counts current", asyn
     data: {
       email: `cards-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

@@ -12,7 +12,6 @@ async function seedWorkspace(page: Page, withSamples = true) {
     data: {
       email: `test-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(auth.status()).toBe(201);
@@ -38,7 +37,6 @@ test("real signup, create, edit, review, partial payment, full payment, export a
   ).toHaveCount(0);
   await page.getByLabel("이메일", { exact: true }).fill(email);
   await page.getByLabel("비밀번호", { exact: true }).fill("ReviewPass-1234");
-  await page.getByLabel("회원가입 코드", { exact: true }).fill("3333");
   await page.getByRole("button", { name: "계정 만들기", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "리뷰 대시보드" }),

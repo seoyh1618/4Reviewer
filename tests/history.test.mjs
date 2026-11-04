@@ -90,7 +90,6 @@ for (const dialect of ["sqlite", "postgres"]) {
             PGHOST: "",
             DATABASE_PATH: dbPath,
             PORT: String(port),
-            SIGNUP_CODE: "3333",
           },
           stdio: ["ignore", "pipe", "pipe"],
         });
@@ -114,7 +113,6 @@ for (const dialect of ["sqlite", "postgres"]) {
           const result = await request("/auth/signup", "POST", {
             username: "hist_" + randomUUID().replaceAll("-", "").slice(0, 20),
             password: "Pass1234",
-            signupCode: "3333",
           });
           assert.equal(result.status, 201);
           userIds.push(result.body.user.id);

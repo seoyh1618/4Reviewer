@@ -1,6 +1,6 @@
 // Cache only this public connection notice. Account pages, APIs and order
 // images must always go to the network and must never enter Cache Storage.
-const OFFLINE_CACHE = "for-reviewer-offline-v1";
+const OFFLINE_CACHE = "for-reviewer-offline-v2";
 const OFFLINE_PAGE = "/offline.html";
 
 self.addEventListener("install", (event) => {

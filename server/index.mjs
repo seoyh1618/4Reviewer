@@ -113,10 +113,6 @@ const uniqueViolation = (error) =>
   error.code?.startsWith("ERR_SQLITE_CONSTRAINT") ||
   [1555, 2067].includes(error.errcode);
 app.post("/api/auth/signup", async (req, res) => {
-  if (req.body?.signupCode !== (process.env.SIGNUP_CODE || "3333"))
-    return res
-      .status(403)
-      .json({ error: "회원가입 코드가 올바르지 않습니다." });
   const parsed = credentialSchema.safeParse(req.body);
   if (!parsed.success)
     return res.status(400).json({

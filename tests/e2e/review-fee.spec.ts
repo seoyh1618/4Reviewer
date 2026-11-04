@@ -12,7 +12,6 @@ async function start(page: Page) {
         data: {
           email: `fee-${randomUUID()}@example.test`,
           password: "ReviewFee-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

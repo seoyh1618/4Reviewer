@@ -10,7 +10,6 @@ test("review type filter coordinates records, counts, KPIs, export and URL resto
     data: {
       email: `type-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

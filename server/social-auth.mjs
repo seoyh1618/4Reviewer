@@ -187,8 +187,6 @@ export function registerSocialRoutes(
           409,
           "이미 로그인되어 있습니다. 계정 설정에서 소셜 계정을 연결해 주세요.",
         );
-      if (req.body?.signupCode !== (process.env.SIGNUP_CODE || "3333"))
-        throw fail(403, "회원가입 코드가 올바르지 않습니다.");
       const parsed = z
         .object({
           username: z

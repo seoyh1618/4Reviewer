@@ -13,7 +13,6 @@ test("template groups: create, assign, move, ungroup and persist on desktop and 
         data: {
           email: `groups-${randomUUID()}@example.test`,
           password: "TemplateGroups-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

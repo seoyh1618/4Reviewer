@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "포 리뷰어 (For Reviewer)",
-  "short_name": "포 리뷰어",
-  "description": "리뷰 관리, 정산 관리.",
+  "name": "포리뷰어 (For Reviewer)",
+  "short_name": "포리뷰어",
+  "description": "포리뷰어는 리뷰어를 위한 상품·리뷰·페이백 관리 서비스입니다. 주문내역 이미지로 간편 등록하고, 리뷰 일정과 작성 상태, 상품값 페이백·추가 리뷰비·입금 내역을 PC와 모바일에서 한눈에 관리하세요.",
   "lang": "ko",
   "start_url": "/",
   "scope": "/",

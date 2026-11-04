@@ -70,7 +70,7 @@ test("mobile social login keeps full animated identity and all login controls re
   ).toBeEnabled();
 });
 
-test("social signup asks for invitation and ID, cancellation returns to normal login", async ({
+test("social signup asks only for ID, cancellation returns to normal login", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -80,12 +80,13 @@ test("social signup asks for invitation and ID, cancellation returns to normal l
   await page.route("**/api/auth/social/pending", (route) =>
     route.fulfill({ json: { provider: "google" } }),
   );
-  await page.route("**/api/auth/social/signup", (route) =>
-    route.fulfill({
-      status: 403,
-      json: { error: "회원가입 코드가 올바르지 않습니다." },
-    }),
-  );
+  await page.route("**/api/auth/social/signup", async (route) => {
+    expect(route.request().postDataJSON()).toEqual({ username: "social_test" });
+    await route.fulfill({
+      status: 409,
+      json: { error: "이미 사용 중인 아이디입니다." },
+    });
+  });
   await page.route("**/api/auth/social/cancel", (route) =>
     route.fulfill({ json: { ok: true } }),
   );
@@ -93,9 +94,11 @@ test("social signup asks for invitation and ID, cancellation returns to normal l
   const dialog = page.getByRole("dialog");
   await expect(dialog).toContainText("Google로 회원가입");
   await dialog.getByLabel("아이디", { exact: true }).fill("social_test");
-  await dialog.getByLabel("회원가입 코드").fill("wrong");
+  await expect(dialog.getByLabel("회원가입 코드")).toHaveCount(0);
   await dialog.getByRole("button", { name: "가입 완료" }).click();
-  await expect(dialog.getByRole("alert")).toContainText("회원가입 코드");
+  await expect(dialog.getByRole("alert")).toContainText(
+    "이미 사용 중인 아이디",
+  );
   await expect(dialog.getByLabel("비밀번호", { exact: true })).toHaveCount(0);
   await dialog.getByRole("button", { name: "취소", exact: true }).click();
   await expect(dialog).toHaveCount(0);

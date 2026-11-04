@@ -7,7 +7,6 @@ async function signup(page: Page) {
     data: {
       email: `defaults-${randomUUID()}@example.test`,
       password: "Pass1234",
-      signupCode: "3333",
     },
   });
   expect(response.status()).toBe(201);

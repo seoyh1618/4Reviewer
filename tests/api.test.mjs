@@ -73,23 +73,13 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
   try {
     await start();
     assert.equal((await request("/reviews")).status, 401);
-    for (const signupCode of [
-      undefined,
-      "",
-      "1234",
-      "33333",
-      " 3333",
-      3333,
-      null,
-      ["3333"],
-    ]) {
+    for (const password of [undefined, "", "1234567", "a".repeat(129)]) {
       const denied = await request("/auth/signup", "POST", {
         email: "a@example.test",
-        password: "long-password-a",
-        signupCode,
+        password,
       });
-      assert.equal(denied.status, 403);
-      assert.equal(denied.body.error, "회원가입 코드가 올바르지 않습니다.");
+      assert.equal(denied.status, 400);
+      assert.equal(denied.body.error, "비밀번호는 8~128자로 입력해 주세요.");
       assert.equal(denied.setCookie, null);
     }
     const signupDb = new DatabaseSync(dbPath, { readOnly: true });
@@ -108,7 +98,6 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
     const a = await request("/auth/signup", "POST", {
       email: "a@example.test",
       password: "long-password-a",
-      signupCode: "3333",
       remember: true,
     });
     assert.equal(a.status, 201);
@@ -122,7 +111,6 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
     const b = await request("/auth/signup", "POST", {
       email: "b@example.test",
       password: "long-password-b",
-      signupCode: "3333",
     });
     assert.equal(b.status, 201);
     const savedDefaults = await checkRegistrationDefaults(request, a, b);
@@ -308,7 +296,6 @@ test("authenticated persistence, ownership isolation, optimistic concurrency and
         await request("/auth/signup", "POST", {
           email: "weak@example.test",
           password: "123",
-          signupCode: "3333",
         })
       ).status,
       400,

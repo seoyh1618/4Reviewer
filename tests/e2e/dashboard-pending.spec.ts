@@ -10,7 +10,6 @@ test("dashboard lists every pending review by deadline then registration and rem
     data: {
       email: `pending-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

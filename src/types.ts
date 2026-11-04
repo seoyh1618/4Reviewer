@@ -57,7 +57,13 @@ export type Activity = {
 };
 export type Payment = { reviewId: string; amount: number; paidAt: string };
 export type Page =
-  "dashboard" | "products" | "calendar" | "payback" | "insights" | "templates";
+  | "dashboard"
+  | "products"
+  | "calendar"
+  | "payback"
+  | "insights"
+  | "templates"
+  | "defaults";
 export type ReviewTemplateInput = {
   groupId: string;
   title: string;

@@ -11,7 +11,6 @@ test("shipping payback: empty box includes product price, real delivery is fee-o
         data: {
           email: `purchase-payback-${randomUUID()}@example.test`,
           password: "PurchasePayback-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

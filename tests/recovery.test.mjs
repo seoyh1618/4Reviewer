@@ -41,7 +41,6 @@ for (const dialect of ["sqlite", "postgres"])
             PGSCHEMA: "reviewer",
             DATABASE_PATH: file,
             PORT: String(port),
-            SIGNUP_CODE: "3333",
             COOKIE_SECURE: "false",
             APP_ORIGIN: "",
             API_RATE_LIMIT: "2000",
@@ -133,7 +132,6 @@ for (const dialect of ["sqlite", "postgres"])
           username,
           email,
           password,
-          signupCode: "3333",
           recovery: setup,
         });
         assert.equal(a.status, 201);
@@ -143,7 +141,6 @@ for (const dialect of ["sqlite", "postgres"])
         const b = await request("/auth/signup", "POST", {
           username: `b_${randomUUID().replaceAll("-", "").slice(0, 20)}`,
           password,
-          signupCode: "3333",
         });
         users.push(b.body.user.id);
         const state = await request(

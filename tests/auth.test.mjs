@@ -70,7 +70,6 @@ test(
           PGHOST: "",
           DATABASE_PATH: database,
           PORT: String(port),
-          SIGNUP_CODE: "3333",
           COOKIE_SECURE: "false",
           APP_ORIGIN: "",
         },
@@ -111,7 +110,6 @@ test(
         email,
         username,
         password: enteredPassword,
-        signupCode: "3333",
       });
     const login = (identifier, enteredPassword = password) =>
       request("/auth/login", "POST", { identifier, password: enteredPassword });
@@ -212,7 +210,6 @@ test(
         const denied = await request("/auth/signup", "POST", {
           ...identity,
           password: boundaryPassword.slice(0, 7),
-          signupCode: "3333",
         });
         assert.equal(denied.status, 400);
         assert.match(denied.body.error, /8~128자/);

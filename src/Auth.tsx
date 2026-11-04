@@ -53,7 +53,6 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
           ...(signup
             ? {
                 [signupMethod]: f.get(signupMethod),
-                signupCode: f.get("signupCode"),
                 ...(setupRecovery
                   ? {
                       recovery: {
@@ -209,20 +208,6 @@ export default function Auth({ onAuth }: { onAuth: (u: User) => void }) {
               </button>
             </div>
           </label>
-          {signup && (
-            <label>
-              회원가입 코드
-              <input
-                name="signupCode"
-                type="text"
-                placeholder="전달받은 회원가입 코드를 입력해 주세요"
-                autoComplete="off"
-                required
-                minLength={4}
-                maxLength={128}
-              />
-            </label>
-          )}
           {!signup && (
             <div className="auth-options">
               <label className="checkbox-label">

@@ -14,7 +14,6 @@ async function account(page: Page) {
     data: {
       email: `earnings-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(result.status()).toBe(201);

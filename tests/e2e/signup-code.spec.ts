@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import AxeBuilder from "@axe-core/playwright";
 
 for (const method of ["email", "username"] as const) {
-  test(`${method} signup accepts code 3333 with eight characters, rejects invalid input, and supports login`, async ({
+  test(`${method} signup needs no code, enforces eight characters, and supports login`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -13,13 +13,13 @@ for (const method of ["email", "username"] as const) {
     );
     await page.getByRole("button", { name: "회원가입", exact: true }).click();
     await page.screenshot({
-      path: `docs/screenshots/signup-code-${method}-mobile.png`,
+      path: `test-results/signup-without-code-${method}-mobile.png`,
       fullPage: true,
       animations: "disabled",
     });
     const identifier =
       method === "email"
-        ? `signup-code-${randomUUID()}@example.test`
+        ? `signup-${randomUUID()}@example.test`
         : `signup_${randomUUID().replaceAll("-", "").slice(0, 20)}`;
     if (method === "username") {
       await page
@@ -47,41 +47,24 @@ for (const method of ["email", "username"] as const) {
       ),
     ).toBe(true);
     await password.fill("Pass1234");
-    const code = page.getByLabel("회원가입 코드", { exact: true });
-    await expect(code).toHaveAttribute("required", "");
-    await page
-      .getByRole("button", { name: "계정 만들기", exact: true })
-      .click();
-    await expect(code).toBeFocused();
-    await expect(
-      page.getByRole("heading", { name: "SIGN UP", exact: true }),
-    ).toBeVisible();
-
-    await code.fill("1234");
-    const denied = page.waitForResponse((response) =>
-      response.url().endsWith("/api/auth/signup"),
+    await expect(page.getByLabel("회원가입 코드", { exact: true })).toHaveCount(
+      0,
     );
-    await page
-      .getByRole("button", { name: "계정 만들기", exact: true })
-      .click();
-    expect((await denied).status()).toBe(403);
-    await expect(page.getByRole("alert")).toHaveText(
-      "회원가입 코드가 올바르지 않습니다.",
-    );
-    expect(
-      (await (await page.request.get("/api/auth/me")).json()).user,
-    ).toBeNull();
-
-    await code.fill("3333");
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth <= window.innerWidth,
       ),
     ).toBe(true);
     expect((await new AxeBuilder({ page }).analyze()).violations).toEqual([]);
+    const submitted = page.waitForRequest(
+      (request) =>
+        request.url().endsWith("/api/auth/signup") &&
+        request.method() === "POST",
+    );
     await page
       .getByRole("button", { name: "계정 만들기", exact: true })
       .click();
+    expect((await submitted).postDataJSON()).not.toHaveProperty("signupCode");
     await expect(
       page.getByRole("heading", { name: "리뷰 대시보드", exact: true }),
     ).toBeVisible();

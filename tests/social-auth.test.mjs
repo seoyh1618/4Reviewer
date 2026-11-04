@@ -31,7 +31,6 @@ for (const dialect of ["sqlite", "postgres"])
           dialect === "postgres" ? process.env.TEST_DATABASE_URL : "";
         process.env.PGHOST = "";
         process.env.DATABASE_PATH = join(dir, "test.sqlite");
-        process.env.SIGNUP_CODE = "3333";
         db = await openDatabase();
         const { readSession, setSession } = sessionHandlers(db);
         const app = express();
@@ -131,23 +130,16 @@ for (const dialect of ["sqlite", "postgres"])
           (await request("/pending", "GET", undefined, a)).body.provider,
           "google",
         );
+        // Removing the invitation code must not bypass provider authentication.
         assert.equal(
-          (
-            await request(
-              "/signup",
-              "POST",
-              { username, signupCode: "wrong" },
-              a,
-            )
-          ).status,
-          403,
+          (await request("/signup", "POST", { username }, jar())).status,
+          400,
         );
-        const signup = await request(
-          "/signup",
-          "POST",
-          { username, signupCode: "3333" },
-          a,
+        assert.equal(
+          (await request("/signup", "POST", { username: "bad!" }, a)).status,
+          400,
         );
+        const signup = await request("/signup", "POST", { username }, a);
         assert.equal(signup.status, 201, JSON.stringify(signup.body));
         const id = signup.body.user.id;
         users.push(id);

@@ -12,7 +12,6 @@ test("calendar uses actual review processing dates and updates after completion,
     data: {
       email: `calendar-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

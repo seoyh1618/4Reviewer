@@ -17,7 +17,6 @@ test("sign up with only an ID and log in on mobile without an email", async ({
   await expect(page.getByLabel("이메일", { exact: true })).toHaveCount(0);
   await page.getByLabel("아이디", { exact: true }).fill(username);
   await page.getByLabel("비밀번호", { exact: true }).fill("Username-test-1234");
-  await page.getByLabel("회원가입 코드", { exact: true }).fill("3333");
   await expect(
     page.getByLabel("아이디", { exact: true }),
   ).toHaveAccessibleDescription(/4~30자/);
@@ -65,7 +64,6 @@ test("existing email account can set an ID in account settings and keep it after
         data: {
           email: `${username}@example.test`,
           password,
-          signupCode: "3333",
         },
       })
     ).status(),

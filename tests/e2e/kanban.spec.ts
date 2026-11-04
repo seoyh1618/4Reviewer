@@ -15,7 +15,6 @@ test("review kanban preserves filters and layout and moves cards only after revi
     data: {
       email: `kanban-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

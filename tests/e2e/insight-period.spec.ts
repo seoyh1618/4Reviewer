@@ -20,7 +20,6 @@ async function seed(page: Page, empty = false) {
     data: {
       email: `period-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);

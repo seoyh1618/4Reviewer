@@ -9,7 +9,6 @@ test("sidebar: icon navigation, keyboard toggle, persistence and mobile resize",
     data: {
       email: `sidebar-${randomUUID()}@example.test`,
       password: "SidebarPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);
@@ -148,7 +147,6 @@ test("sidebar remains operable when browser storage is unavailable", async ({
         data: {
           email: `sidebar-storage-${randomUUID()}@example.test`,
           password: "SidebarPass-1234",
-          signupCode: "3333",
         },
       })
     ).status(),

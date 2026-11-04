@@ -14,7 +14,6 @@ test.describe("mobile review form and sorting", () => {
       data: {
         username: "mobile_" + randomUUID().replaceAll("-", "").slice(0, 20),
         password: "Pass1234",
-        signupCode: "3333",
       },
     });
     expect(res.status()).toBe(201);

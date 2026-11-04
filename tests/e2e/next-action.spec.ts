@@ -11,7 +11,6 @@ test("next action: a single transition per review, zero-payback entry and alread
     data: {
       email: `next-action-${randomUUID()}@example.test`,
       password: "ReviewPass-1234",
-      signupCode: "3333",
     },
   });
   expect(signup.status()).toBe(201);
