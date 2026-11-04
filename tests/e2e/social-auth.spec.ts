@@ -131,3 +131,47 @@ test("social signup asks only for ID, cancellation returns to normal login", asy
     page.getByRole("button", { name: "Sign in", exact: true }),
   ).toBeVisible();
 });
+
+test("mobile account withdrawal requires confirmation and password, then clears the session", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const username = `withdraw_${Date.now()}`;
+  expect(
+    (
+      await page.request.post("/api/auth/signup", {
+        data: { username, password: "WithdrawTest123" },
+      })
+    ).status(),
+  ).toBe(201);
+  await page.goto("/");
+  await page.getByRole("button", { name: "내 계정", exact: true }).click();
+  const section = page.getByRole("region", { name: "회원 탈퇴", exact: true });
+  await section.getByRole("button", { name: "회원 탈퇴", exact: true }).click();
+  await expect(section).toContainText("복구할 수 없어요");
+  await section.getByRole("button", { name: "취소", exact: true }).click();
+  expect((await page.request.get("/api/auth/me")).status()).toBe(200);
+  await section.getByRole("button", { name: "회원 탈퇴", exact: true }).click();
+  await section.getByLabel("현재 비밀번호").fill("wrong-password");
+  await section.getByLabel("확인을 위해").fill("탈퇴");
+  await section.getByRole("button", { name: "계정과 데이터 삭제" }).click();
+  await expect(section.getByRole("alert")).toContainText("현재 비밀번호");
+  await section.getByLabel("현재 비밀번호").fill("WithdrawTest123");
+  expect(await section.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+    true,
+  );
+  await section.getByRole("button", { name: "계정과 데이터 삭제" }).click();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeVisible();
+  expect((await page.request.get("/api/auth/social/accounts")).status()).toBe(
+    401,
+  );
+  expect(
+    (
+      await page.request.post("/api/auth/login", {
+        data: { email: username, password: "WithdrawTest123" },
+      })
+    ).status(),
+  ).toBe(401);
+});

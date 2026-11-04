@@ -172,6 +172,34 @@ export function registerSocialRoutes(
     }),
   );
   app.post(
+    "/api/auth/social/withdraw",
+    guard(async (req, res) => {
+      requireUser(req);
+      if (req.body.confirmation !== "탈퇴")
+        throw fail(400, "삭제 안내를 확인하고 '탈퇴'를 입력해 주세요.");
+      await db.transaction(async () => {
+        const user = await lockedUser(db, req.user.id);
+        await verifiedAccount(req, user, req.body.currentPassword);
+        // Also remove unfinished signups for the same identity, before its link is removed.
+        await db
+          .prepare(
+            `DELETE FROM oauth_flows WHERE user_id=? OR EXISTS (
+          SELECT 1 FROM social_identities s WHERE s.user_id=?
+          AND s.provider=oauth_flows.provider AND s.subject=oauth_flows.subject
+        )`,
+          )
+          .run(user.id, user.id);
+        // User-owned records and immutable history cascade together, atomically.
+        await db.prepare("DELETE FROM users WHERE id=?").run(user.id);
+      });
+      res.clearCookie("reviewer_session", options());
+      res.clearCookie(secureName("reviewer_social_signup"), options());
+      for (const provider of Object.keys(providerNames))
+        res.clearCookie(browserCookie(provider), options());
+      res.json({ ok: true });
+    }),
+  );
+  app.post(
     "/api/auth/social/cancel",
     guard(async (req, res) => {
       const flow = await pending(req);

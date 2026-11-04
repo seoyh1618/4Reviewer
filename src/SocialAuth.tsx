@@ -226,7 +226,15 @@ type AccountStatus = {
   identities: { provider: Provider; created_at: string }[];
   recentAuthentication: boolean;
 };
-export function SocialAccountSettings({ children }: { children: ReactNode }) {
+export function SocialAccountSettings({
+  children,
+  onDeleted,
+}: {
+  children: ReactNode;
+  onDeleted: () => void;
+}) {
+  const [withdrawing, setWithdrawing] = useState(false);
+  const [withdrawError, setWithdrawError] = useState("");
   const [status, setStatus] = useState<AccountStatus | null>(null);
   const [action, setAction] = useState<{
     provider: Provider;
@@ -301,6 +309,23 @@ export function SocialAccountSettings({ children }: { children: ReactNode }) {
       await reload();
     } catch (e) {
       setError((e as Error).message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function withdraw(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setWithdrawError("");
+    const data = new FormData(event.currentTarget);
+    try {
+      await api("/auth/social/withdraw", "POST", {
+        confirmation: data.get("confirmation"),
+        currentPassword: data.get("currentPassword") || undefined,
+      });
+      onDeleted();
+    } catch (e) {
+      setWithdrawError((e as Error).message);
     } finally {
       setBusy(false);
     }
@@ -455,6 +480,100 @@ export function SocialAccountSettings({ children }: { children: ReactNode }) {
         )}
       </section>
       {status?.hasPassword && children}
+      {status && (
+        <section
+          className="social-settings account-withdrawal"
+          aria-label="회원 탈퇴"
+        >
+          <h4>회원 탈퇴</h4>
+          <p>
+            탈퇴하면 계정과 상품·리뷰·입금 기록, 변경 이력, 템플릿을 모두
+            삭제하며 복구할 수 없어요.
+          </p>
+          {!withdrawing ? (
+            <Button
+              type="button"
+              disabled={busy}
+              onClick={() => setWithdrawing(true)}
+            >
+              회원 탈퇴
+            </Button>
+          ) : (
+            <form className="social-action-form" onSubmit={withdraw}>
+              {status.hasPassword ? (
+                <label>
+                  현재 비밀번호
+                  <input
+                    name="currentPassword"
+                    type="password"
+                    required
+                    maxLength={128}
+                    autoComplete="current-password"
+                  />
+                </label>
+              ) : !status.recentAuthentication ? (
+                <>
+                  <p>계정 삭제 전, 연결한 소셜 계정으로 본인 확인해 주세요.</p>
+                  {status.identities
+                    .filter((p) =>
+                      status.providers.some((v) => v.id === p.provider),
+                    )
+                    .map((p) => (
+                      <Button
+                        type="button"
+                        key={p.provider}
+                        disabled={busy}
+                        onClick={() => void reauth(p.provider)}
+                      >
+                        {names[p.provider]}로 본인 확인
+                      </Button>
+                    ))}
+                </>
+              ) : (
+                <p>최근 본인 확인한 계정의 데이터를 삭제합니다.</p>
+              )}
+              <label>
+                확인을 위해 ‘탈퇴’를 입력해 주세요.
+                <input
+                  name="confirmation"
+                  required
+                  pattern="탈퇴"
+                  autoComplete="off"
+                />
+              </label>
+              <p>
+                암호화 백업은 약 2주 후 순환 삭제돼요. 소셜 서비스의 앱 이용
+                승인은 해당 서비스의 연결 관리에서 해제할 수 있어요.
+              </p>
+              {withdrawError && (
+                <p className="error-message" role="alert">
+                  {withdrawError}
+                </p>
+              )}
+              <div>
+                <Button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    setWithdrawing(false);
+                    setWithdrawError("");
+                  }}
+                >
+                  취소
+                </Button>
+                <Button
+                  type="submit"
+                  variant="danger"
+                  busy={busy}
+                  disabled={!status.hasPassword && !status.recentAuthentication}
+                >
+                  계정과 데이터 삭제
+                </Button>
+              </div>
+            </form>
+          )}
+        </section>
+      )}
     </>
   );
 }

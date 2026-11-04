@@ -386,6 +386,142 @@ for (const dialect of ["sqlite", "postgres"])
                 .run(id),
             { code: "42501" },
           );
+        // Withdrawal is scoped to the authenticated owner, with explicit confirmation.
+        assert.equal(
+          (await request("/withdraw", "POST", { confirmation: "탈퇴" })).status,
+          401,
+        );
+        assert.equal(
+          (
+            await request(
+              "/withdraw",
+              "POST",
+              { currentPassword: "ExistingPassword123" },
+              c,
+            )
+          ).status,
+          400,
+        );
+        assert.equal(
+          (
+            await request(
+              "/withdraw",
+              "POST",
+              { confirmation: "탈퇴", currentPassword: "wrong" },
+              c,
+            )
+          ).status,
+          401,
+        );
+        assert.deepEqual(
+          await db.prepare("SELECT * FROM reviews WHERE id=?").get(reviewId),
+          reviewBefore,
+        );
+        await db
+          .prepare(
+            "INSERT INTO payments(id,user_id,review_id,amount,paid_at) VALUES(?,?,?,?,?)",
+          )
+          .run(randomUUID(), localId, reviewId, 1000, now);
+        assert(
+          await db
+            .prepare("SELECT id FROM review_history WHERE user_id=?")
+            .get(localId),
+        );
+        assert(
+          await db
+            .prepare("SELECT id FROM payment_history WHERE user_id=?")
+            .get(localId),
+        );
+        const savedSession = new Map(c);
+        assert.equal(
+          (
+            await request(
+              "/withdraw",
+              "POST",
+              {
+                confirmation: "탈퇴",
+                currentPassword: "ExistingPassword123",
+                userId: id,
+              },
+              c,
+            )
+          ).status,
+          200,
+        );
+        assert.equal(c.has("reviewer_session"), false);
+        assert.equal(
+          (await request("/accounts", "GET", undefined, savedSession)).status,
+          401,
+        );
+        for (const table of [
+          "sessions",
+          "reviews",
+          "payments",
+          "review_history",
+          "payment_history",
+          "social_identities",
+          "social_auth_events",
+          "oauth_flows",
+        ])
+          assert.equal(
+            (
+              await db
+                .prepare(`SELECT count(*) AS n FROM ${table} WHERE user_id=?`)
+                .get(localId)
+            ).n,
+            0,
+          );
+        assert.equal(
+          await db.prepare("SELECT id FROM users WHERE id=?").get(localId),
+          undefined,
+        );
+        assert.equal(
+          (await db.prepare("SELECT id FROM users WHERE id=?").get(id)).id,
+          id,
+        );
+        const socialOnly = jar();
+        const socialState = await begin("kakao", socialOnly);
+        await callback("kakao", socialState, `withdraw-${subject}`, socialOnly);
+        const newSignup = await request(
+          "/signup",
+          "POST",
+          { username: `w_${username}` },
+          socialOnly,
+        );
+        assert.equal(newSignup.status, 201);
+        const newId = newSignup.body.user.id;
+        users.push(newId);
+        await db
+          .prepare("UPDATE sessions SET authenticated_at=0 WHERE user_id=?")
+          .run(newId);
+        assert.equal(
+          (
+            await request(
+              "/withdraw",
+              "POST",
+              { confirmation: "탈퇴" },
+              socialOnly,
+            )
+          ).status,
+          403,
+        );
+        const verify = await begin("kakao", socialOnly, "reauth");
+        await callback("kakao", verify, `withdraw-${subject}`, socialOnly);
+        assert.equal(
+          (
+            await request(
+              "/withdraw",
+              "POST",
+              { confirmation: "탈퇴" },
+              socialOnly,
+            )
+          ).status,
+          200,
+        );
+        assert.equal(
+          await db.prepare("SELECT id FROM users WHERE id=?").get(newId),
+          undefined,
+        );
       } finally {
         if (server) await new Promise((resolve) => server.close(resolve));
         if (db) {

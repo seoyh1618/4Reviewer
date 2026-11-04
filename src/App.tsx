@@ -269,18 +269,21 @@ export default function App() {
     setFilters({ ...defaultFilters, status });
     window.scrollTo({ top: 0 });
   }
+  function clearAccountState() {
+    generation.current++;
+    setUser(null);
+    setAccount(false);
+    setSelectedId(null);
+    setForm(null);
+    setWorkflow(null);
+    setItems([]);
+    setToast("");
+    navigate("dashboard");
+  }
   async function logout() {
     try {
       await api("/auth/logout", "POST", {});
-      generation.current++;
-      setUser(null);
-      setAccount(false);
-      setSelectedId(null);
-      setForm(null);
-      setWorkflow(null);
-      setItems([]);
-      setToast("");
-      navigate("dashboard");
+      clearAccountState();
     } catch (e) {
       setToast((e as Error).message);
     }
@@ -695,7 +698,7 @@ export default function App() {
             </span>
             <h3>내 계정</h3>
             <p>{user.email || user.username}</p>
-            <SocialAccountSettings>
+            <SocialAccountSettings onDeleted={clearAccountState}>
               <UsernameForm
                 user={user}
                 onSave={(updated) =>

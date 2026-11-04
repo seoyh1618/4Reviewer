@@ -36,7 +36,7 @@ DB 버전 6:
 
 - `social_identities`: 사용자 ID, 제공자, 제공자 고유 식별값, 연결일, 최근 로그인일. `(provider,subject)`와 `(user_id,provider)`는 각각 유일하다.
 - `social_auth_events`: 가입, 로그인, 연결, 해제, 재인증, 비밀번호 최초 설정 이력. 앱은 추가·조회, DBeaver는 조회만 가능하다.
-- `oauth_flows`: 10분 유효한 인증/가입 진행 상태. 상태 토큰과 브라우저 쿠키의 해시, PKCE verifier, nonce를 저장한다. 만료 상태는 다음 인증 시작 시 정리한다. DBeaver 역할에는 접근 권한을 주지 않는다.
+- `oauth_flows`: 10분 유효한 인증/가입 진행 상태. 상태 토큰과 브라우저 쿠키의 해시, PKCE verifier, nonce를 저장한다. 만료 상태는 다음 인증 시작 시 및 매시간 정리하고, 서버 시작 때에도 정리한다. DBeaver 역할에는 접근 권한을 주지 않는다.
 - `sessions`: 인증 시각과 인증 방식을 추가한다. 기존 세션·사용자·리뷰를 보존하는 추가형 마이그레이션이다.
 
 인증 요청은 브라우저 쿠키, 일회용 state, 제공자, 연결을 시작한 사용자·세션에 묶인다. Google ID 토큰은 서명·issuer·audience·만료·nonce를 확인한다. Google/카카오는 PKCE를 함께 요청한다. 토큰 교환은 서버에서만 수행하며 외부 access/refresh token을 DB에 보관하지 않는다. Callback 이후에는 토큰 없는 고정 내부 경로로 이동한다. HTTPS에서는 인증 진행 쿠키에 `__Host-`, Secure, HttpOnly, SameSite=Lax를 적용한다.
@@ -60,3 +60,12 @@ ORDER BY created_at DESC;
 공식 문서: [Google OIDC](https://developers.google.com/identity/openid-connect/openid-connect), [카카오 로그인](https://developers.kakao.com/docs/ko/kakaologin/rest-api), [카카오 무료 쿼터](https://developers.kakao.com/docs/ko/getting-started/quota), [네이버 로그인](https://developers.naver.com/docs/login/api/api.md).
 
 Google 버튼 이미지는 [공식 배포 아이콘](https://developers.google.com/identity/branding-guidelines)의 Android/Web Neutral Pill 아이콘 전용 PNG(@4x)를 수정 없이 사용한다. 연한 회색 배경의 원형이며 테두리가 없다. 모든 제공자는 동일한 44px 클릭 영역과 접근 가능한 로그인 이름을 제공한다. 카카오는 노란색(#FEE500), 네이버는 [현재 공식 지정색](https://developers.naver.com/docs/login/bi/bi.md)인 녹색(#03A94D)을 사용한다.
+
+
+## 회원 탈퇴와 카카오 외부 연결 해제
+
+- **내 계정 → 회원 탈퇴**에서 `탈퇴` 입력과 현재 비밀번호(소셜 전용 계정은 최근 10분 내 해당 계정 재인증)를 확인한다. 사용자 잠금과 트랜잭션 안에서 본인 계정만 삭제한다. 상품·입금·불변 이력·템플릿·복구 수단·세션·소셜 연결은 FK cascade로 함께 삭제된다. 백업은 기존 약 2주 순환 정책을 따른다.
+- 카카오 연결 해제 알림은 `POST https://forreviwer.com/api/auth/social/kakao/unlink-webhook`으로 등록한다. 서버의 `KAKAO_APP_ID`와 `KAKAO_ADMIN_KEY`(대표 어드민 키)로 앱 ID·Authorization을 검증한다. URL-encoded 본문은 이 경로에서만 허용하며 기존 브라우저 API의 Origin/JSON 검증은 유지한다.
+- 외부 연결 해제 시 카카오 식별값·인증 진행 정보·카카오로 발급된 세션만 제거하고, 이용자가 직접 입력한 리뷰 및 다른 로그인 수단은 유지한다. 개인정보 전체 삭제는 서비스의 회원 탈퇴로 처리한다. 유일한 로그인 수단을 외부에서 끊기 전 비밀번호나 다른 수단을 설정하도록 개인정보 안내에 명시한다.
+- 웹훅은 같은 알림을 다시 받아도 중복 이력을 생성하지 않는다. 인증 실패 및 다른 앱의 요청은 처리하지 않는다. DB 실패는 성공으로 기록하지 않고 503과 비밀값 없는 운영 로그를 남긴다.
+- 로컬 PostgreSQL의 실제 앱 역할로 삭제·불변 이력 cascade·다른 사용자 보존 및 웹훅의 인증·중복 요청을 검증한다. Chrome/WebKit에서 모바일 탈퇴 확인·취소·잘못된 비밀번호·로그인 해제도 확인한다.

@@ -1,5 +1,6 @@
 import express from "express";
 import { registerSocialRoutes } from "./social-auth.mjs";
+import { registerKakaoWebhook } from "./kakao-webhook.mjs";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import { openDatabase } from "./database.mjs";
@@ -54,6 +55,7 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "64kb" }));
+registerKakaoWebhook(app, db);
 app.use("/api", async (req, res, next) => {
   res.set("Cache-Control", "no-store");
   if (!["GET", "HEAD", "OPTIONS"].includes(req.method)) {
@@ -526,11 +528,18 @@ const port = Number(process.env.PORT || 3001);
 const server = app.listen(port, "0.0.0.0", () =>
   console.log(`4Reviewer API ready on ${port}`),
 );
-const sessionCleanup = setInterval(() => {
-  db.prepare("DELETE FROM sessions WHERE expires_at < ?")
-    .run(Date.now())
-    .catch(() => console.error("Session cleanup failed"));
-}, 3600000).unref();
+async function cleanupExpiredAuth() {
+  try {
+    for (const table of ["sessions", "oauth_flows", "recovery_tokens"])
+      await db
+        .prepare(`DELETE FROM ${table} WHERE expires_at < ?`)
+        .run(Date.now());
+  } catch {
+    console.error("Expired authentication cleanup failed");
+  }
+}
+void cleanupExpiredAuth();
+const sessionCleanup = setInterval(cleanupExpiredAuth, 3600000).unref();
 function stop() {
   clearInterval(sessionCleanup);
   server.close(async () => {
