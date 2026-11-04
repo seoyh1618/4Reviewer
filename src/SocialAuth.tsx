@@ -485,7 +485,7 @@ export function SocialAccountSettings({
           className="social-settings account-withdrawal"
           aria-label="회원 탈퇴"
         >
-          <h4>회원 탈퇴</h4>
+          <h3>회원 탈퇴</h3>
           <p>
             탈퇴하면 계정과 상품·리뷰·입금 기록, 변경 이력, 템플릿을 모두
             삭제하며 복구할 수 없어요.
