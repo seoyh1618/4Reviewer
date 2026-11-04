@@ -7,11 +7,9 @@ import {
 } from "react";
 import { ImagePlus } from "lucide-react";
 import OrderImport from "./OrderImport";
-import RegistrationDefaultsForm from "./RegistrationDefaultsForm";
 import {
   composeRegistrationInput,
   selectedRegistrationDefaults,
-  registrationFields,
 } from "../shared/registration-defaults.mjs";
 import {
   platforms,
@@ -24,12 +22,7 @@ import {
 } from "../shared/domain.mjs";
 import { api, emptyReview, won } from "./lib";
 import { Modal, Button, PaybackBadge } from "./ui";
-import type {
-  Review,
-  ReviewInput,
-  RegistrationDefaults,
-  RegistrationDefaultKey,
-} from "./types";
+import type { Review, ReviewInput, RegistrationDefaults } from "./types";
 
 function DateField(props: Omit<ComponentProps<"input">, "type">) {
   return (
@@ -56,14 +49,8 @@ export default function ReviewForm({
   const [manualFields, setManualFields] = useState<Partial<ReviewInput>>({});
   const [ocrFields, setOcrFields] = useState<Partial<ReviewInput>>({});
   const [defaults, setDefaults] = useState<RegistrationDefaults | null>(null);
-  const [activeFields, setActiveFields] = useState<RegistrationDefaultKey[]>(
-    [],
-  );
   const [defaultsLoading, setDefaultsLoading] = useState(!item);
   const [defaultsError, setDefaultsError] = useState("");
-  const [showDefaults, setShowDefaults] = useState(false);
-  const [defaultsPending, setDefaultsPending] = useState(true);
-  const defaultsFormId = useId();
   const [error, setError] = useState(""),
     [saving, setSaving] = useState(false),
     [ocrBusy, setOcrBusy] = useState(false);
@@ -74,7 +61,6 @@ export default function ReviewForm({
       .then(({ defaults }) => {
         if (cancelled) return;
         setDefaults(defaults);
-        setActiveFields(defaults.enabledFields);
       })
       .catch((e) => {
         if (!cancelled) setDefaultsError((e as Error).message);
@@ -88,7 +74,7 @@ export default function ReviewForm({
   }, [item]);
   const data = composeRegistrationInput(
     baseData,
-    item ? {} : selectedRegistrationDefaults(defaults, activeFields),
+    item ? {} : selectedRegistrationDefaults(defaults),
     ocrFields,
     manualFields,
   ) as ReviewInput;
@@ -147,73 +133,11 @@ export default function ReviewForm({
               onBusy={setOcrBusy}
             />
           )}
-          {!item && (
-            <section
-              className="registration-prefill"
-              aria-label="내 기본정보 자동 채움"
-            >
-              <div className="prefill-heading">
-                <strong>내 기본정보</strong>
-                <Button
-                  type="button"
-                  disabled={defaultsLoading || saving || ocrBusy}
-                  onClick={() => setShowDefaults(true)}
-                >
-                  기본정보 설정
-                </Button>
-              </div>
-              {defaultsLoading ? (
-                <p role="status">기본정보를 불러오는 중…</p>
-              ) : defaultsError ? (
-                <p role="alert">
-                  기본정보를 불러오지 못했어요. 직접 입력하거나 설정에서 다시
-                  불러오세요.
-                </p>
-              ) : defaults && defaults.version > 0 ? (
-                <>
-                  <details>
-                    <summary>
-                      이번 상품에 자동 채움 · {activeFields.length}개 항목
-                    </summary>
-                    <div className="defaults-choices">
-                      {registrationFields.map(({ key: fieldKey, label }) => {
-                        const key = fieldKey as RegistrationDefaultKey;
-                        const available =
-                          key === "purchaser"
-                            ? !!defaults.values.purchaser
-                            : key === "platform" &&
-                                defaults.values.platform === "기타"
-                              ? !!defaults.values.platformOther
-                              : true;
-                        return (
-                          <label className="defaults-choice" key={key}>
-                            <input
-                              type="checkbox"
-                              aria-label={`이번 상품 ${label} 자동 채움`}
-                              disabled={!available || saving || ocrBusy}
-                              checked={activeFields.includes(key)}
-                              onChange={(e) =>
-                                setActiveFields((current) =>
-                                  e.target.checked
-                                    ? [...current, key]
-                                    : current.filter((field) => field !== key),
-                                )
-                              }
-                            />
-                            {label}
-                          </label>
-                        );
-                      })}
-                    </div>
-                  </details>
-                  <p>직접 입력한 값과 주문 이미지에서 읽은 값을 우선해요.</p>
-                </>
-              ) : (
-                <p>
-                  자주 쓰는 계정주와 리뷰 조건을 저장해 자동으로 채워 보세요.
-                </p>
-              )}
-            </section>
+          {!item && defaultsError && (
+            <p className="error-message" role="alert">
+              기본정보를 불러오지 못했어요. 직접 입력하거나 자동입력 설정에서
+              다시 불러오세요.
+            </p>
           )}
           <div className="form-section-heading">
             <span>01</span>
@@ -592,40 +516,6 @@ export default function ReviewForm({
           </Button>
         </div>
       </form>
-      {showDefaults && (
-        <Modal
-          title="상품 등록 기본정보"
-          className="defaults-settings-modal"
-          onClose={() => setShowDefaults(false)}
-        >
-          <div className="modal-body">
-            <RegistrationDefaultsForm
-              formId={defaultsFormId}
-              onPendingChange={setDefaultsPending}
-              onSaved={(saved) => {
-                setDefaults(saved);
-                setActiveFields(saved.enabledFields);
-                setDefaultsError("");
-                setShowDefaults(false);
-              }}
-            />
-          </div>
-          <div className="modal-footer">
-            <Button type="button" onClick={() => setShowDefaults(false)}>
-              닫기
-            </Button>
-            <span className="footer-spacer" />
-            <Button
-              type="submit"
-              form={defaultsFormId}
-              variant="primary"
-              busy={defaultsPending}
-            >
-              기본정보 저장
-            </Button>
-          </div>
-        </Modal>
-      )}
     </Modal>
   );
 }

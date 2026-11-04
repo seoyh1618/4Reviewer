@@ -58,8 +58,7 @@
   max-width: 100%;
   box-sizing: border-box;
 }
-.defaults-field-heading .defaults-check,
-.defaults-choice {
+.defaults-field-heading .defaults-check {
   display: inline-flex;
   flex-direction: row;
   align-items: center;
@@ -69,8 +68,7 @@
   font-weight: 400;
   min-height: 28px;
 }
-.registration-defaults-form input[type="checkbox"],
-.registration-prefill input[type="checkbox"] {
+.registration-defaults-form input[type="checkbox"] {
   flex: 0 0 16px;
   width: 16px;
   height: 16px;
@@ -90,72 +88,6 @@
   color: #3b6653;
   font-size: 12px;
 }
-.registration-prefill {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px 14px;
-  background: #f8fafc;
-  margin-bottom: 20px;
-  min-width: 0;
-}
-.prefill-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.prefill-heading strong {
-  font-size: 13px;
-  color: #334155;
-}
-.prefill-heading .button {
-  padding: 6px 10px;
-  min-height: 34px;
-}
-.registration-prefill p {
-  font-size: 11px;
-  line-height: 1.6;
-  color: #64748b;
-  margin-top: 6px;
-}
-.registration-prefill details {
-  margin-top: 6px;
-}
-.registration-prefill summary {
-  font-size: 12px;
-  color: #475569;
-  cursor: pointer;
-  padding: 4px 0;
-}
-.defaults-choices {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-.defaults-choice {
-  padding: 4px 8px;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  min-height: 36px;
-}
-.defaults-settings-modal[open] {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.defaults-settings-modal > .modal-header,
-.defaults-settings-modal > .modal-footer {
-  flex-shrink: 0;
-  position: static;
-}
-.defaults-settings-modal > .modal-body {
-  min-width: 0;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-}
 @media (max-width: 600px) {
   .registration-defaults-panel {
     padding: 18px;
@@ -168,19 +100,12 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 14px;
   }
-  .defaults-field-heading .defaults-check,
-  .defaults-choice {
+  .defaults-field-heading .defaults-check {
     min-height: 40px;
   }
   .defaults-field :is(input:not([type="checkbox"]), select) {
     min-height: 44px;
     font-size: 16px;
-  }
-  .registration-prefill {
-    padding: 10px 12px;
-  }
-  .defaults-settings-modal .modal-body {
-    padding: 18px;
   }
   .defaults-actions {
     flex-wrap: wrap;

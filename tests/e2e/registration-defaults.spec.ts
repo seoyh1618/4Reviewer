@@ -31,22 +31,13 @@ const savedInput = {
 };
 
 for (const width of [390, 1280]) {
-  test(`saved defaults can be selected on registration and survive reload at ${width}px`, async ({
+  test(`saved defaults apply without a registration settings panel and survive reload at ${width}px`, async ({
     page,
   }, info) => {
     await page.setViewportSize({ width, height: 844 });
     await signup(page);
-    await page.goto("/?view=products");
-    await page.getByRole("button", { name: "상품 등록", exact: true }).click();
-    const form = page.getByRole("dialog", {
-      name: "새 상품 등록",
-      exact: true,
-    });
-    await form.getByLabel("상품명").fill("기본정보 등록검증");
-    await form
-      .getByRole("button", { name: "기본정보 설정", exact: true })
-      .click();
-    const settings = page.getByRole("dialog", {
+    await page.goto("/?view=defaults");
+    const settings = page.getByRole("form", {
       name: "상품 등록 기본정보",
       exact: true,
     });
@@ -77,33 +68,22 @@ for (const width of [390, 1280]) {
     if (width === 390) {
       for (const w of [320, 390]) {
         await page.setViewportSize({ width: w, height: 700 });
-        await expect(
-          settings.getByRole("button", { name: "기본정보 저장", exact: true }),
-        ).toBeInViewport();
-        await expect(
-          settings.getByRole("heading", {
-            name: "상품 등록 기본정보",
-            exact: true,
-          }),
-        ).toBeInViewport();
         expect(
           await settings.evaluate((el) => el.scrollWidth <= el.clientWidth),
         ).toBe(true);
         expect(
-          await settings
-            .locator(".modal-body")
-            .evaluate((el) => el.scrollWidth <= el.clientWidth),
+          await page.evaluate(
+            () => document.documentElement.scrollWidth <= innerWidth,
+          ),
         ).toBe(true);
       }
-      await settings.locator(".modal-body").evaluate((el) => {
-        el.scrollTop = 0;
-      });
+      await page.setViewportSize({ width, height: 844 });
     }
     await page.screenshot({
       path: `docs/screenshots/registration-defaults-${info.project.name}-${width}.png`,
     });
     const accessibility = await new AxeBuilder({ page })
-      .include(".defaults-settings-modal")
+      .include(".registration-defaults-panel")
       .analyze();
     expect(
       accessibility.violations.filter((v) =>
@@ -113,8 +93,19 @@ for (const width of [390, 1280]) {
     await settings
       .getByRole("button", { name: "기본정보 저장", exact: true })
       .click();
-    await expect(settings).toHaveCount(0);
-    await expect(form.getByLabel("상품명")).toHaveValue("기본정보 등록검증");
+    await expect(settings.getByRole("status")).toContainText("저장했습니다");
+    await page.getByRole("button", { name: "상품 등록", exact: true }).click();
+    const form = page.getByRole("dialog", {
+      name: "새 상품 등록",
+      exact: true,
+    });
+    await expect(
+      form.getByRole("region", { name: "내 기본정보 자동 채움" }),
+    ).toHaveCount(0);
+    await expect(
+      form.getByRole("button", { name: "기본정보 설정", exact: true }),
+    ).toHaveCount(0);
+    await form.getByLabel("상품명").fill("기본정보 등록검증");
     await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue(
       "저장한 계정주",
     );
@@ -127,16 +118,7 @@ for (const width of [390, 1280]) {
     await expect(form.getByLabel("기타 플랫폼 이름")).toHaveValue(
       "테스트 마켓",
     );
-    await form.locator(".registration-prefill summary").click();
-    await form.getByLabel("이번 상품 계정주 자동 채움").uncheck();
-    await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue("");
-    await form.getByLabel("이번 상품 계정주 자동 채움").check();
     await form.getByLabel("계정주 (구매 계정)").fill("이번 구매 계정");
-    await form.getByLabel("이번 상품 계정주 자동 채움").uncheck();
-    await form.getByLabel("이번 상품 계정주 자동 채움").check();
-    await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue(
-      "이번 구매 계정",
-    );
     await form.getByLabel("구매금액").fill("10000");
     await form.getByRole("button", { name: "상품 등록하기" }).click();
     await expect(form).toHaveCount(0);
@@ -233,10 +215,8 @@ test("late defaults preserve manual input and account changes cannot reuse anoth
   await page.reload();
   await page.getByRole("button", { name: "상품 등록", exact: true }).click();
   await expect(
-    form.getByText(
-      "자주 쓰는 계정주와 리뷰 조건을 저장해 자동으로 채워 보세요.",
-    ),
-  ).toBeVisible();
+    form.getByRole("button", { name: "상품 등록하기", exact: true }),
+  ).toBeEnabled();
   await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue("");
   await expect(form.getByLabel("리뷰비", { exact: true })).toHaveValue("0");
 });
