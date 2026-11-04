@@ -7,6 +7,31 @@ const providers = [
   { id: "kakao", name: "카카오" },
   { id: "naver", name: "네이버" },
 ];
+test("review preview requests the configured provider without changing the normal login list", async ({
+  page,
+}) => {
+  await page.route("**/api/auth/social/providers*", (route) => {
+    const preview = new URL(route.request().url()).searchParams.get("preview");
+    return route.fulfill({
+      json: {
+        providers:
+          preview === "naver" ? [providers[0], providers[2]] : [providers[0]],
+      },
+    });
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("button", { name: "Google로 계속하기" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "네이버로 계속하기" }),
+  ).toHaveCount(0);
+  await page.goto("/?social_preview=naver");
+  await expect(
+    page.getByRole("button", { name: "네이버로 계속하기" }),
+  ).toBeVisible();
+  await expect(page.locator(".social-divider")).toContainText("테스트");
+});
 test("mobile social login keeps full animated identity and all login controls reachable", async ({
   page,
 }) => {

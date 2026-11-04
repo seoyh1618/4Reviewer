@@ -52,6 +52,7 @@ for (const dialect of ["sqlite", "postgres"])
           publicUser,
           setSession,
           config,
+          previewProviders: ["naver"],
           exchange: async (_p, _c, _f, code) => {
             exchanges++;
             return code;
@@ -86,6 +87,22 @@ for (const dialect of ["sqlite", "postgres"])
             location: response.headers.get("location"),
           };
         };
+        assert.deepEqual(
+          (await request("/providers")).body.providers.map((p) => p.id),
+          ["google", "kakao"],
+        );
+        assert.deepEqual(
+          (await request("/providers?preview=naver")).body.providers.map(
+            (p) => p.id,
+          ),
+          ["google", "kakao", "naver"],
+        );
+        assert.deepEqual(
+          (await request("/providers?preview=unknown")).body.providers.map(
+            (p) => p.id,
+          ),
+          ["google", "kakao"],
+        );
         const begin = async (provider, store, intent = "login", extra = {}) => {
           const result = await request(
             `/${provider}/start`,

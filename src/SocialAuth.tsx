@@ -6,6 +6,14 @@ import { usernamePattern } from "../shared/auth.mjs";
 import "./social-auth.css";
 
 export const socialReturn = new URLSearchParams(location.search).get("social");
+const previewProvider = new URLSearchParams(location.search).get(
+  "social_preview",
+);
+const providerQuery = ["google", "kakao", "naver"].includes(
+  previewProvider || "",
+)
+  ? `?preview=${previewProvider}`
+  : "";
 
 type Provider = "google" | "kakao" | "naver";
 type ProviderItem = { id: Provider; name: string };
@@ -17,7 +25,11 @@ const names: Record<Provider, string> = {
 function Logo({ provider }: { provider: Provider }) {
   if (provider === "google")
     return (
-      <img src="/brand/google-signin-neutral-round.png" alt="" aria-hidden="true" />
+      <img
+        src="/brand/google-signin-neutral-round.png"
+        alt=""
+        aria-hidden="true"
+      />
     );
   if (provider === "naver")
     return (
@@ -58,7 +70,9 @@ export function SocialLogin({
   const [error, setError] = useState("");
   useEffect(() => {
     let active = true;
-    void api<{ providers: ProviderItem[] }>("/auth/social/providers")
+    void api<{ providers: ProviderItem[] }>(
+      `/auth/social/providers${providerQuery}`,
+    )
       .then((r) => {
         if (active) setProviders(r.providers);
       })
@@ -131,7 +145,9 @@ export function SocialLogin({
     <>
       {providers.length > 0 && (
         <div className="social-login">
-          <span className="social-divider">간편 로그인 · 회원가입</span>
+          <span className="social-divider">
+            간편 로그인 · 회원가입{providerQuery ? " · 테스트" : ""}
+          </span>
           <div className="social-buttons">
             {providers.map((p) => (
               <button
@@ -230,7 +246,7 @@ export function SocialAccountSettings({ children }: { children: ReactNode }) {
               : "",
     );
   const reload = () =>
-    api<AccountStatus>("/auth/social/accounts").then(setStatus);
+    api<AccountStatus>(`/auth/social/accounts${providerQuery}`).then(setStatus);
   useEffect(() => {
     void reload().catch((e) => setError(e.message));
   }, []);

@@ -61,6 +61,7 @@ services:
       KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET:-}
       NAVER_CLIENT_ID: ${NAVER_CLIENT_ID:-}
       NAVER_CLIENT_SECRET: ${NAVER_CLIENT_SECRET:-}
+      SOCIAL_AUTH_PREVIEW_PROVIDERS: ${SOCIAL_AUTH_PREVIEW_PROVIDERS:-}
     depends_on:
       postgres: {condition: service_healthy}
     networks: [database, web]

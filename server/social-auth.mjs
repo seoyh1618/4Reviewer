@@ -47,8 +47,18 @@ export function registerSocialRoutes(
     publicUser,
     config = socialConfig(),
     exchange = exchangeIdentity,
+    previewProviders = (process.env.SOCIAL_AUTH_PREVIEW_PROVIDERS || "")
+      .split(",")
+      .map((id) => id.trim()),
   },
 ) {
+  // Display control for providers awaiting review; OAuth still verifies every login.
+  const listedProviders = (req) =>
+    Object.keys(config)
+      .filter(
+        (id) => !previewProviders.includes(id) || req.query.preview === id,
+      )
+      .map((id) => ({ id, name: providerNames[id] }));
   const audit = (userId, provider, event) =>
     db
       .prepare(
@@ -132,12 +142,9 @@ export function registerSocialRoutes(
       message: { error: "시도가 많습니다. 잠시 후 다시 시도해 주세요." },
     }),
   );
-  app.get("/api/auth/social/providers", (_req, res) =>
+  app.get("/api/auth/social/providers", (req, res) =>
     res.json({
-      providers: Object.keys(config).map((id) => ({
-        id,
-        name: providerNames[id],
-      })),
+      providers: listedProviders(req),
     }),
   );
   app.get(
@@ -151,10 +158,7 @@ export function registerSocialRoutes(
         .all(req.user.id);
       res.json({
         hasPassword: !!req.user.password,
-        providers: Object.keys(config).map((id) => ({
-          id,
-          name: providerNames[id],
-        })),
+        providers: listedProviders(req),
         identities,
         recentAuthentication: req.user.authenticated_at > Date.now() - lifetime,
       });
