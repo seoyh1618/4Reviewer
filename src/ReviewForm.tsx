@@ -122,7 +122,7 @@ export default function ReviewForm({
         if (!saving) onClose();
       }}
       wide
-      className="review-form-modal"
+      className={`review-form-modal${item ? " review-edit-modal" : ""}`}
     >
       <form onSubmit={submit}>
         <div className="modal-body form-body">
@@ -156,7 +156,7 @@ export default function ReviewForm({
                 onChange={(e) => update("name", e.target.value)}
               />
             </label>
-            <label className="span-2">
+            <label className="span-2 purchaser-field">
               계정주 (구매 계정)
               <input
                 maxLength={80}

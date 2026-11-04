@@ -144,27 +144,79 @@ test.describe("mobile review form and sorting", () => {
     await expect(
       dialog.getByRole("heading", { name: "상품 정보 수정" }),
     ).toBeVisible();
-    await page.setViewportSize({ width: 320, height: 568 });
     for (const name of ["SKU", "주문번호", "연락처"]) {
       await expect(dialog.getByLabel(name, { exact: true })).toHaveCount(0);
     }
-    const reference = (await dialog
-      .getByLabel("판매처", { exact: true })
-      .boundingBox())!;
-    for (const frame of await dialog.locator(".date-field").all()) {
-      const bounds = (await frame.boundingBox())!;
-      expect(Math.abs(bounds.x - reference.x)).toBeLessThan(1);
-      expect(Math.abs(bounds.width - reference.width)).toBeLessThan(1);
+    for (const [width, height] of [
+      [320, 568],
+      [390, 844],
+      [430, 932],
+      [600, 800],
+      [390, 400],
+    ]) {
+      await page.setViewportSize({ width, height });
+      const reference = (await dialog
+        .getByLabel("판매처", { exact: true })
+        .boundingBox())!;
+      for (const frame of await dialog.locator(".date-field").all()) {
+        const bounds = (await frame.boundingBox())!;
+        expect(Math.abs(bounds.width - reference.width)).toBeLessThan(1);
+        expect(bounds.x).toBeGreaterThanOrEqual(0);
+        expect(bounds.x + bounds.width).toBeLessThanOrEqual(width);
+      }
+      for (const [leftLabel, rightLabel] of [
+        ["리뷰 가이드 (유형)", "리뷰 마감일"],
+        ["리뷰 상태", "리뷰 작성일"],
+        ["예상 페이백", "추가 리뷰비"],
+        ["실제 누적 입금액", "정산일"],
+      ]) {
+        const left = (await dialog.getByLabel(leftLabel).boundingBox())!;
+        const right = (await dialog.getByLabel(rightLabel).boundingBox())!;
+        expect(right.x).toBeGreaterThanOrEqual(left.x + left.width);
+        // Native date inputs sit inside a one-pixel bordered frame.
+        expect(Math.abs(left.y - right.y)).toBeLessThanOrEqual(2);
+      }
+      const nameWidth = (await dialog.getByLabel("상품명").boundingBox())!
+        .width;
+      expect(nameWidth).toBeGreaterThan(reference.width * 2);
+      await dialog.getByLabel("정산일", { exact: true }).focus();
+      expect(
+        await dialog
+          .locator(".form-body")
+          .evaluate((el) => el.scrollWidth <= el.clientWidth),
+      ).toBe(true);
+      await expect(
+        dialog.getByRole("button", { name: "변경사항 저장", exact: true }),
+      ).toBeInViewport();
     }
-    await dialog.getByLabel("정산일", { exact: true }).focus();
+    await page.setViewportSize({ width: 390, height: 844 });
+    await dialog.getByLabel("구매 플랫폼").selectOption("쿠팡");
+    await dialog.getByLabel("상품명").fill("모바일 두 칸 수정 검증");
+    await dialog.getByLabel("계정주 (구매 계정)").fill("테스트 계정");
+    await dialog.getByLabel("구매금액").fill("10000");
+    await dialog.getByLabel("리뷰 마감일", { exact: true }).fill("2026-11-15");
+    await dialog.locator(".form-body").evaluate((el) => {
+      el.scrollTop = 0;
+    });
+    await page.screenshot({
+      path: `docs/screenshots/mobile-edit-two-columns-${engine}.png`,
+      animations: "disabled",
+    });
     expect(
-      await dialog
-        .locator(".form-body")
-        .evaluate((el) => el.scrollWidth <= el.clientWidth),
-    ).toBe(true);
-    await expect(
-      dialog.getByRole("button", { name: "변경사항 저장", exact: true }),
-    ).toBeInViewport();
+      (await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze())
+        .violations,
+    ).toEqual([]);
+    await dialog
+      .getByRole("button", { name: "변경사항 저장", exact: true })
+      .click();
+    await expect(dialog).toBeHidden();
+    const edited = await (await page.request.get("/api/reviews")).json();
+    expect(edited.reviews[0]).toMatchObject({
+      name: "모바일 두 칸 수정 검증",
+      purchaser: "테스트 계정",
+      price: 10000,
+      dueDate: "2026-11-15",
+    });
   });
   test("column taps sort the whole list before paging and persist across reloads, export and views", async ({
     page,
