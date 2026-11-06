@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { hashToken, lockedUser } from "./credentials.mjs";
+import { recordMemberActivity } from "./member-activity.mjs";
 export function cookieToken(req) {
   const c = (req.headers.cookie || "")
     .split(";")
@@ -10,6 +11,7 @@ export const publicUser = (u) => ({
   id: u.id,
   email: u.email || null,
   username: u.username || null,
+  ...(u.is_admin ? { isAdmin: true } : {}),
 });
 
 export function sessionHandlers(db) {
@@ -18,10 +20,14 @@ export function sessionHandlers(db) {
     if (token) {
       const u = await db
         .prepare(
-          "SELECT users.*, sessions.authenticated_at, sessions.auth_method FROM sessions JOIN users ON users.id=sessions.user_id WHERE token=? AND expires_at>? AND users.is_demo=0",
+          "SELECT users.*, sessions.authenticated_at, sessions.auth_method, CASE WHEN admin_memberships.user_id IS NULL THEN 0 ELSE 1 END AS is_admin FROM sessions JOIN users ON users.id=sessions.user_id LEFT JOIN admin_memberships ON admin_memberships.user_id=users.id WHERE token=? AND expires_at>? AND users.is_demo=0",
         )
         .get(hashToken(token), Date.now());
-      if (u) req.user = u;
+      if (u) {
+        req.user = u;
+        if (req.path !== "/health" && !req.path.startsWith("/admin"))
+          await recordMemberActivity(db, u.id);
+      }
     }
     next();
   }
@@ -48,6 +54,10 @@ export function sessionHandlers(db) {
           Date.now(),
           authMethod,
         );
+      await recordMemberActivity(db, user.id);
+      user.is_admin = !!(await db
+        .prepare("SELECT user_id FROM admin_memberships WHERE user_id=?")
+        .get(user.id));
       return true;
     });
     if (!created) return false;

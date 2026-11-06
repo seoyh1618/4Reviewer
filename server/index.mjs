@@ -1,4 +1,5 @@
 import express from "express";
+import { registerAdminRoutes } from "./admin.mjs";
 import { registerSocialRoutes } from "./social-auth.mjs";
 import { registerKakaoWebhook } from "./kakao-webhook.mjs";
 import helmet from "helmet";
@@ -303,6 +304,7 @@ app.use("/api", async (req, res, next) =>
 );
 registerTemplateRoutes(app, db);
 registerRegistrationDefaultsRoutes(app, db);
+registerAdminRoutes(app, db);
 function decode(row) {
   return {
     ...normalizeReview(JSON.parse(row.data)),
@@ -491,6 +493,13 @@ app.use("/api", async (_req, res) =>
   res.status(404).json({ error: "요청한 기능을 찾을 수 없습니다." }),
 );
 // Keep the public service page separate from the login SPA at its canonical URL.
+app.get(["/admin", "/admin/"], (_req, res) =>
+  res.set("X-Robots-Tag", "noindex, nofollow").redirect(302, "/?view=admin"),
+);
+app.use((req, res, next) => {
+  if (req.query.view === "admin") res.set("X-Robots-Tag", "noindex, nofollow");
+  next();
+});
 app.get(["/about", "/about/"], (_req, res) => res.redirect(301, "/about.html"));
 if (process.env.NODE_ENV === "production") {
   app.use(

@@ -21,6 +21,7 @@ export default defineConfig({
         "**/registration-defaults.spec.ts",
         "**/recovery.spec.ts",
         "**/social-auth.spec.ts",
+        "**/admin-dashboard.spec.ts",
       ],
       use: { browserName: "webkit" },
     },

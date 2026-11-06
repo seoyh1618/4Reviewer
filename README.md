@@ -121,3 +121,5 @@ docs/              기획·검증·화면 캡처
 ```
 
 사용자별 상품·리뷰·입금 이력은 PostgreSQL에 저장됩니다. DBeaver 조회용 컬럼, 이력 보존 기준과 집계는 [리뷰 데이터 가이드](docs/REVIEW-DATA.md), 바로 실행할 쿼리는 [SQL 모음](docs/REVIEW-DATA.sql)을 참고하세요.
+
+관리자 전용 `/admin`에서 월별 가입·활성 회원, 리뷰·정산 지표와 회원별 상품 이용 내역을 확인합니다. 권한 부여와 집계 기준은 [관리자 대시보드 가이드](docs/ADMIN-DASHBOARD.md)를 참고하세요.

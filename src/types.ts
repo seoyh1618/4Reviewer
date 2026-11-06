@@ -35,6 +35,7 @@ export type User = {
   id: string;
   email: string | null;
   username: string | null;
+  isAdmin?: boolean;
 };
 export type RegistrationDefaultKey =
   | "purchaser"
@@ -81,6 +82,7 @@ export type Page =
   | "payback"
   | "insights"
   | "templates"
+  | "admin"
   | "defaults";
 export type ReviewTemplateInput = {
   groupId: string;

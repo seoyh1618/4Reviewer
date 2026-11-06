@@ -74,6 +74,14 @@ test("SQLite upgrade preserves old defaults as one editable default profile, onl
         "2026-11-01",
       );
     await db.prepare("DROP TABLE registration_profiles").run();
+    await db.prepare("DROP TABLE admin_memberships").run();
+    await db.prepare("DROP TABLE member_daily_activity").run();
+    for (const index of [
+      "users_joined",
+      "reviews_created",
+      "review_history_recorded",
+    ])
+      await db.prepare(`DROP INDEX ${index}`).run();
     await db.prepare("PRAGMA user_version=6").run();
     await db.close();
     db = await openDatabase();

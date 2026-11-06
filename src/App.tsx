@@ -1,4 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  lazy,
+  Suspense,
+} from "react";
 import {
   LayoutDashboard,
   Package,
@@ -60,6 +67,7 @@ import type {
   Payment,
 } from "./types";
 
+const AdminDashboard = lazy(() => import("./AdminDashboard"));
 const nav = [
   { id: "dashboard" as Page, label: "대시보드", Icon: LayoutDashboard },
   { id: "products" as Page, label: "내 리뷰", Icon: Package },
@@ -81,7 +89,7 @@ function urlState() {
   const p = new URLSearchParams(location.search);
   const shippingMethod = p.get("shipping") || "";
   return {
-    page: (nav.some((n) => n.id === p.get("view"))
+    page: (p.get("view") === "admin" || nav.some((n) => n.id === p.get("view"))
       ? p.get("view")
       : "dashboard") as Page,
     filters: {
@@ -246,6 +254,13 @@ export default function App() {
         if (value) p.set(key, value);
       }
     }
+    if (page === "admin") {
+      const current = new URLSearchParams(location.search);
+      for (const key of ["adminMonth", "adminQ", "adminStatus", "adminSort"]) {
+        const value = current.get(key);
+        if (value) p.set(key, value);
+      }
+    }
     if (filters.search) p.set("q", filters.search);
     if (filters.platform) p.set("platform", filters.platform);
     if (filters.shippingMethod) p.set("shipping", filters.shippingMethod);
@@ -380,6 +395,20 @@ export default function App() {
       </div>
     );
   if (!user) return <Auth onAuth={authenticated} />;
+  if (page === "admin")
+    return (
+      <Suspense
+        fallback={
+          <div className="loading-screen">관리자 화면을 준비하고 있습니다…</div>
+        }
+      >
+        <AdminDashboard
+          user={user}
+          onBack={() => navigate("dashboard")}
+          onLogout={() => void logout()}
+        />
+      </Suspense>
+    );
   const sum = totals(items),
     pending = items.filter((i) => remainingPayback(i) > 0).length,
     urgent = items.filter(
@@ -449,6 +478,16 @@ export default function App() {
               ) : null}
             </button>
           ))}
+          {user.isAdmin && (
+            <button
+              className="nav-item"
+              onClick={() => navigate("admin")}
+              title="관리자 대시보드"
+            >
+              <ShieldCheck size={19} />
+              <span>관리자 대시보드</span>
+            </button>
+          )}
         </nav>
         <div className="sidebar-bottom">
           <button
@@ -698,6 +737,17 @@ export default function App() {
             </span>
             <h3>내 계정</h3>
             <p>{user.email || user.username}</p>
+            {user.isAdmin && (
+              <Button
+                onClick={() => {
+                  setAccount(false);
+                  navigate("admin");
+                }}
+              >
+                <ShieldCheck size={16} />
+                관리자 대시보드
+              </Button>
+            )}
             <SocialAccountSettings onDeleted={clearAccountState}>
               <UsernameForm
                 user={user}

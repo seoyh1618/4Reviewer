@@ -49,6 +49,7 @@ jobs:
           GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA reviewer TO reviewer_app;
           REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON reviewer.review_history,reviewer.payment_history FROM reviewer_app;
           REVOKE UPDATE,DELETE,TRUNCATE ON reviewer.account_security_events,reviewer.social_auth_events FROM reviewer_app;
+          REVOKE INSERT,UPDATE,DELETE,TRUNCATE ON reviewer.admin_memberships FROM reviewer_app;
           SQL
       - run: npm test
         env:
@@ -81,6 +82,11 @@ jobs:
         run: npx playwright test tests/e2e/registration-defaults.spec.ts
         env:
           DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+      - name: Administrator dashboard and access control on Chrome and WebKit
+        run: npx playwright test tests/e2e/admin-dashboard.spec.ts
+        env:
+          DATABASE_URL: postgresql://reviewer_app:ci-only-app-password@127.0.0.1:5432/reviewer_test
+          TEST_DATABASE_ADMIN_URL: postgresql://reviewer_admin:ci-only-admin-password@127.0.0.1:5432/reviewer_test
       - name: Multi-image OCR on Chrome and WebKit
         run: npx playwright test tests/e2e/order-ocr.spec.ts
         env:
