@@ -55,6 +55,24 @@ export type Activity = {
   amount: number;
   createdAt: string;
 };
+export type RegistrationProfileDetails = {
+  phone: string;
+  address: string;
+  email: string;
+  bank: string;
+  accountNumber: string;
+  accountHolder: string;
+};
+export type RegistrationProfile = RegistrationDefaults & {
+  id: string;
+  details: RegistrationProfileDetails;
+  isDefault: boolean;
+  createdAt: string;
+};
+export type RegistrationProfileInput = Pick<
+  RegistrationProfile,
+  "values" | "enabledFields" | "details" | "version"
+> & { makeDefault: boolean };
 export type Payment = { reviewId: string; amount: number; paidAt: string };
 export type Page =
   | "dashboard"

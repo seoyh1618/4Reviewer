@@ -2,8 +2,14 @@ import {
   emptyRegistrationDefaults,
   registrationDefaultsSchema,
 } from "../shared/registration-defaults.mjs";
+import {
+  registrationProfileStore,
+  registerRegistrationProfileRoutes,
+} from "./registration-profiles.mjs";
 
 export function registerRegistrationDefaultsRoutes(app, db) {
+  const profiles = registrationProfileStore(db);
+  registerRegistrationProfileRoutes(app, db, profiles);
   const read = async (userId) => {
     const row = await db
       .prepare("SELECT * FROM registration_defaults WHERE user_id=?")
@@ -34,6 +40,7 @@ export function registerRegistrationDefaultsRoutes(app, db) {
     const { values: v, enabledFields, version } = parsed.data;
     const now = new Date().toISOString();
     const saved = await db.transaction(async () => {
+      await profiles.lock(req.user.id);
       const updated =
         version === 0
           ? await db
@@ -67,15 +74,16 @@ export function registerRegistrationDefaultsRoutes(app, db) {
                 req.user.id,
                 version,
               );
-      return updated.changes ? read(req.user.id) : null;
+      if (!updated.changes) return null;
+      const defaults = await read(req.user.id);
+      await profiles.syncFromLegacy(req.user.id, defaults);
+      return defaults;
     });
     if (!saved)
-      return res
-        .status(409)
-        .json({
-          error:
-            "다른 화면에서 기본정보가 변경됐습니다. 다시 불러온 뒤 저장해 주세요.",
-        });
+      return res.status(409).json({
+        error:
+          "다른 화면에서 기본정보가 변경됐습니다. 다시 불러온 뒤 저장해 주세요.",
+      });
     res.json({ defaults: saved });
   });
 }

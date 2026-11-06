@@ -67,7 +67,7 @@ const nav = [
   { id: "calendar" as Page, label: "리뷰 캘린더", Icon: CalendarDays },
   { id: "payback" as Page, label: "페이백", Icon: Wallet },
   { id: "insights" as Page, label: "통계", Icon: ChartNoAxesCombined },
-  { id: "defaults" as Page, label: "자동입력 설정", Icon: SlidersHorizontal },
+  { id: "defaults" as Page, label: "내 정보 관리", Icon: SlidersHorizontal },
 ];
 const defaultFilters: Filters = {
   search: "",
@@ -657,7 +657,7 @@ export default function App() {
                 : id === "templates"
                   ? "템플릿"
                   : id === "defaults"
-                    ? "자동입력"
+                    ? "내 정보"
                     : label}
             </span>
           </button>

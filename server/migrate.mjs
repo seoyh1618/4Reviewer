@@ -74,8 +74,21 @@ try {
         "utf8",
       ),
     );
+  if (
+    !(
+      await client.query(
+        "SELECT version FROM schema_migrations WHERE version=7",
+      )
+    ).rowCount
+  )
+    await client.query(
+      await readFile(
+        new URL("./migrations/007-registration-profiles.sql", import.meta.url),
+        "utf8",
+      ),
+    );
   await client.query("COMMIT");
-  console.log("Database schema ready: version 6");
+  console.log("Database schema ready: version 7");
 } catch (error) {
   await client.query("ROLLBACK");
   throw error;

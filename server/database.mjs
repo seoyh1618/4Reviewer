@@ -49,7 +49,7 @@ export async function openDatabase() {
       console.error("Database connection error:", error.code),
     );
     const migrated = await pool.query(
-      "SELECT version FROM schema_migrations WHERE version=6",
+      "SELECT version FROM schema_migrations WHERE version=7",
     );
     if (!migrated.rowCount) {
       await pool.end();
@@ -153,6 +153,24 @@ export async function openDatabase() {
       sqlite.exec(
         readFileSync(
           new URL("./sqlite-social-login.sql", import.meta.url),
+          "utf8",
+        ),
+      );
+      sqlite.exec("COMMIT");
+    } catch (error) {
+      sqlite.exec("ROLLBACK");
+      throw error;
+    }
+  }
+  if (
+    !postgres &&
+    sqlite.prepare("PRAGMA user_version").get().user_version < 7
+  ) {
+    sqlite.exec("BEGIN IMMEDIATE");
+    try {
+      sqlite.exec(
+        readFileSync(
+          new URL("./sqlite-registration-profiles.sql", import.meta.url),
           "utf8",
         ),
       );

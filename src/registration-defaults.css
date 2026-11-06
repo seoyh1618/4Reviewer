@@ -1,9 +1,3 @@
-.registration-defaults-form {
-  text-align: left;
-  display: grid;
-  gap: 16px;
-  min-width: 0;
-}
 .registration-defaults-page {
   max-width: 1000px;
   min-width: 0;
@@ -11,64 +5,172 @@
 .registration-defaults-panel {
   padding: 24px;
 }
-.account-body .registration-defaults-form {
+.registration-profiles {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  text-align: left;
+}
+.account-body > .registration-profiles {
   margin-top: 24px;
   padding-top: 24px;
   border-top: 1px solid var(--border);
 }
-.registration-defaults-form header h3 {
+.profiles-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+.profiles-heading h3 {
   font-size: 16px;
   color: #27303e;
   margin-bottom: 8px;
 }
-.registration-defaults-form header p,
+.profiles-heading h3 span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  margin-left: 5px;
+}
+.profiles-heading p,
 .defaults-help {
   color: #64748b;
   font-size: 12px;
   line-height: 1.7;
 }
-.defaults-grid {
+.profiles-heading .button {
+  flex-shrink: 0;
+}
+.profile-card {
+  border: 1px solid #dfe4eb;
+  border-radius: 12px;
+  background: #fff;
+  min-width: 0;
+  overflow: hidden;
+}
+.profile-card.is-open {
+  border-color: #b7c3d3;
+}
+.profile-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  text-align: left;
+  background: #fff;
+  border: 0;
+  border-radius: 11px;
+  color: #27303e;
+  cursor: pointer;
+}
+.profile-toggle:hover {
+  background: #f8fafc;
+}
+.profile-toggle:focus-visible {
+  outline: 2px solid #64748b;
+  outline-offset: -3px;
+}
+.profile-summary {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+.profile-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.profile-title small {
+  font-size: 10px;
+  font-weight: 500;
+  color: #526072;
+  background: #f0f3f6;
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+.profile-subline {
+  font-size: 12px;
+  color: #64748b;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.profile-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #64748b;
+}
+.profile-card.is-open .profile-toggle-label svg {
+  transform: rotate(180deg);
+}
+.profile-editor {
+  padding: 18px;
+  border-top: 1px solid #edf0f4;
+  display: grid;
+  gap: 18px;
+  min-width: 0;
+}
+.profile-new h4 {
+  padding: 18px;
+  margin: 0;
+  font-size: 14px;
+  color: #27303e;
+}
+.profile-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   border: 0;
-  padding: 0;
   margin: 0;
+  padding: 0;
   min-width: 0;
 }
-.defaults-field {
+.profile-fields > label {
+  display: block;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.defaults-field-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-.defaults-field-heading > label {
   font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.5;
 }
-.defaults-field :is(input:not([type="checkbox"]), select) {
+.profile-fields > label em {
+  font-style: normal;
+  color: #64748b;
+}
+.profile-fields :is(input:not([type="checkbox"]), select) {
+  display: block;
   width: 100%;
   min-width: 0;
   max-width: 100%;
   box-sizing: border-box;
+  margin-top: 7px;
 }
-.defaults-field-heading .defaults-check {
-  display: inline-flex;
-  flex-direction: row;
+.profile-fields .unit-input input {
+  margin-top: 0;
+}
+.profile-fields .unit-input {
+  margin-top: 7px;
+}
+.profile-full {
+  grid-column: 1 / -1;
+}
+.profile-fields .profile-default-check {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  color: #526072;
-  font-size: 11px;
-  font-weight: 400;
-  min-height: 28px;
+  gap: 8px;
 }
-.registration-defaults-form input[type="checkbox"] {
+.profile-editor input[type="checkbox"] {
   flex: 0 0 16px;
   width: 16px;
   height: 16px;
@@ -76,38 +178,142 @@
   margin: 0;
   accent-color: #64748b;
 }
-.defaults-other {
-  font-size: 11px;
+.profile-autofill {
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 0 12px;
+  min-width: 0;
 }
+.profile-autofill[open] {
+  padding-bottom: 14px;
+}
+.profile-autofill summary {
+  font-size: 12px;
+  font-weight: 500;
+  color: #475569;
+  padding: 14px 0;
+  cursor: pointer;
+}
+.profile-autofill-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 12px 0 16px;
+}
+.profile-autofill-options label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  font-size: 12px;
+  color: #475569;
+}
+.profile-editor-actions,
 .defaults-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
 }
+.profile-editor-actions > :first-child {
+  margin-right: auto;
+}
+.profile-editor-actions .profile-delete {
+  color: #64748b;
+}
+.profile-delete-confirm {
+  display: grid;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.6;
+}
 .defaults-success {
   color: #3b6653;
   font-size: 12px;
 }
+.profiles-empty {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  color: #64748b;
+}
+.profiles-empty strong {
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+.profiles-empty p {
+  font-size: 12px;
+  text-align: center;
+  line-height: 1.6;
+}
+.profiles-reload {
+  justify-self: start;
+  background: none;
+  border: 0;
+  padding: 8px 0;
+  color: #64748b;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.registration-profile-picker {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 20px 0;
+  font-size: 12px;
+}
+.registration-profile-picker select {
+  width: 100%;
+  min-width: 0;
+}
+.registration-profile-picker small {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.6;
+}
 @media (max-width: 600px) {
   .registration-defaults-panel {
-    padding: 18px;
+    padding: 14px;
   }
   .registration-defaults-page .page-title {
     flex-wrap: wrap;
     gap: 16px;
   }
-  .defaults-grid {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 14px;
+  .profiles-heading {
+    flex-wrap: wrap;
+    gap: 12px;
   }
-  .defaults-field-heading .defaults-check {
-    min-height: 40px;
+  .profiles-heading h3 {
+    font-size: 15px;
   }
-  .defaults-field :is(input:not([type="checkbox"]), select) {
+  .profile-toggle {
+    padding: 14px 12px;
+  }
+  .profile-editor {
+    padding: 14px 12px;
+  }
+  .profile-fields {
+    gap: 14px 10px;
+  }
+  .profile-fields :is(input:not([type="checkbox"]), select),
+  .registration-profile-picker select {
     min-height: 44px;
     font-size: 16px;
   }
-  .defaults-actions {
-    flex-wrap: wrap;
+  .profile-default-check,
+  .profile-autofill-options label {
+    min-height: 44px;
+  }
+  .profile-title {
+    font-size: 13px;
   }
 }

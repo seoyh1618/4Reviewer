@@ -22,7 +22,9 @@ import {
 } from "../shared/domain.mjs";
 import { api, emptyReview, won } from "./lib";
 import { Modal, Button, PaybackBadge } from "./ui";
-import type { Review, ReviewInput, RegistrationDefaults } from "./types";
+import type { Review, ReviewInput, RegistrationProfile } from "./types";
+import { profileLabel } from "../shared/registration-profiles.mjs";
+import "./registration-defaults.css";
 
 function DateField(props: Omit<ComponentProps<"input">, "type">) {
   return (
@@ -48,7 +50,9 @@ export default function ReviewForm({
   );
   const [manualFields, setManualFields] = useState<Partial<ReviewInput>>({});
   const [ocrFields, setOcrFields] = useState<Partial<ReviewInput>>({});
-  const [defaults, setDefaults] = useState<RegistrationDefaults | null>(null);
+  const [profiles, setProfiles] = useState<RegistrationProfile[]>([]);
+  const [profileId, setProfileId] = useState("");
+  const defaults = profiles.find((p) => p.id === profileId) ?? null;
   const [defaultsLoading, setDefaultsLoading] = useState(!item);
   const [defaultsError, setDefaultsError] = useState("");
   const [error, setError] = useState(""),
@@ -57,10 +61,11 @@ export default function ReviewForm({
   useEffect(() => {
     if (item) return;
     let cancelled = false;
-    void api<{ defaults: RegistrationDefaults }>("/registration-defaults")
-      .then(({ defaults }) => {
+    void api<{ profiles: RegistrationProfile[] }>("/registration-profiles")
+      .then(({ profiles }) => {
         if (cancelled) return;
-        setDefaults(defaults);
+        setProfiles(profiles);
+        setProfileId(profiles.find((p) => p.isDefault)?.id || "");
       })
       .catch((e) => {
         if (!cancelled) setDefaultsError((e as Error).message);
@@ -135,9 +140,30 @@ export default function ReviewForm({
           )}
           {!item && defaultsError && (
             <p className="error-message" role="alert">
-              기본정보를 불러오지 못했어요. 직접 입력하거나 자동입력 설정에서
+              기본정보를 불러오지 못했어요. 직접 입력하거나 내 정보 관리에서
               다시 불러오세요.
             </p>
+          )}
+          {!item && profiles.length > 0 && (
+            <label className="registration-profile-picker">
+              사용할 정보 묶음
+              <select
+                disabled={defaultsLoading || saving}
+                value={profileId}
+                onChange={(e) => setProfileId(e.target.value)}
+              >
+                <option value="">선택 안 함</option>
+                {profiles.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {profileLabel(p)}
+                    {p.isDefault ? " (기본)" : ""}
+                  </option>
+                ))}
+              </select>
+              <small>
+                선택한 자동 채움 항목을 적용해요. 직접 수정한 값은 유지돼요.
+              </small>
+            </label>
           )}
           <div className="form-section-heading">
             <span>01</span>

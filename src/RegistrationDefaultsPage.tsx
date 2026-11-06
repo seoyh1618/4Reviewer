@@ -12,8 +12,8 @@ export default function RegistrationDefaultsPage({
       <div className="page-title">
         <PageHeading
           icon={SlidersHorizontal}
-          title="자동입력 설정"
-          subtitle="상품 등록에 자주 사용하는 정보와 자동 채움 항목을 관리하세요."
+          title="내 정보 관리"
+          subtitle="이름과 플랫폼별로 정보를 묶어 간편하게 관리하세요."
         />
         <Button onClick={onAdd}>
           <Plus size={17} />

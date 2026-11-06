@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { checkRegistrationProfiles } from "./registration-profiles.mjs";
 
 export async function checkRegistrationDefaults(request, a, b) {
   assert.equal((await request("/registration-defaults")).status, 401);
@@ -139,5 +140,5 @@ export async function checkRegistrationDefaults(request, a, b) {
   assert.equal(cleared.body.defaults.values.purchaser, "");
   assert.equal(cleared.body.defaults.values.platformOther, "");
   assert.equal(cleared.body.defaults.values.additionalReviewFee, 0);
-  return cleared.body.defaults;
+  return checkRegistrationProfiles(request, a, b);
 }
