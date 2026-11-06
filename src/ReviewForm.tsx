@@ -146,7 +146,7 @@ export default function ReviewForm({
           )}
           {!item && profiles.length > 0 && (
             <label className="registration-profile-picker">
-              사용할 정보 묶음
+              등록 정보 선택
               <select
                 disabled={defaultsLoading || saving}
                 value={profileId}

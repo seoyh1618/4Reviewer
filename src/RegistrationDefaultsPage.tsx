@@ -13,7 +13,7 @@ export default function RegistrationDefaultsPage({
         <PageHeading
           icon={SlidersHorizontal}
           title="내 정보 관리"
-          subtitle="이름과 플랫폼별로 정보를 묶어 간편하게 관리하세요."
+          subtitle="이름과 플랫폼별로 등록 정보를 간편하게 관리하세요."
         />
         <Button onClick={onAdd}>
           <Plus size={17} />

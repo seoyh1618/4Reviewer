@@ -57,7 +57,7 @@ export const registrationProfileSchema = z
     if (!parsed.data.values.purchaser) {
       ctx.addIssue({
         code: "custom",
-        message: "묶음을 구분할 이름(계정주)을 입력해 주세요.",
+        message: "등록 정보를 구분할 이름(계정주)을 입력해 주세요.",
         path: ["values", "purchaser"],
       });
       return z.NEVER;

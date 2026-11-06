@@ -55,15 +55,15 @@ export default function RegistrationDefaultsForm() {
     setProfiles(next);
     setOpen(selected ?? null);
     setNotice(
-      selected ? "정보 묶음을 저장했습니다." : "정보 묶음을 삭제했습니다.",
+      selected ? "등록 정보를 저장했습니다." : "등록 정보를 삭제했습니다.",
     );
   };
   return (
-    <section className="registration-profiles" aria-label="내 정보 묶음">
+    <section className="registration-profiles" aria-label="등록 정보">
       <header className="profiles-heading">
         <div>
           <h3>
-            내 정보 묶음 <span>{profiles.length}</span>
+            등록 정보 <span>{profiles.length}</span>
           </h3>
           <p>이름과 플랫폼별로 연락처·주소·정산 계좌를 관리하세요.</p>
         </div>
@@ -75,7 +75,7 @@ export default function RegistrationDefaultsForm() {
           }}
         >
           <Plus size={16} />
-          묶음 추가
+          정보 추가
         </Button>
       </header>
       {loading && <p role="status">내 정보를 불러오는 중…</p>}
@@ -90,7 +90,7 @@ export default function RegistrationDefaultsForm() {
           {!profiles.length && open !== "new" && (
             <div className="profiles-empty">
               <UserRound size={26} />
-              <strong>첫 번째 정보 묶음을 만들어 보세요</strong>
+              <strong>상품 등록에 사용할 정보를 추가해 보세요</strong>
               <p>같은 이름도 플랫폼별로 나누어 저장할 수 있어요.</p>
             </div>
           )}
@@ -131,7 +131,7 @@ export default function RegistrationDefaultsForm() {
           ))}
           {open === "new" && (
             <article className="profile-card is-open profile-new">
-              <h4>새 정보 묶음</h4>
+              <h4>새 정보 등록</h4>
               <RegistrationProfileEditor
                 onSaved={saved}
                 onBusy={setBusy}
@@ -140,7 +140,7 @@ export default function RegistrationDefaultsForm() {
             </article>
           )}
           <p className="defaults-help">
-            기본 묶음은 새 상품에 자동 적용돼요. 다른 묶음은 상품 등록에서
+            기본 정보는 새 상품에 자동 적용돼요. 다른 정보는 상품 등록에서
             선택할 수 있어요.
           </p>
         </>

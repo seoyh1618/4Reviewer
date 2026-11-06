@@ -41,14 +41,14 @@ for (const width of [390, 1280]) {
     await signup(page);
     await page.goto("/?view=defaults");
     const region = page.getByRole("region", {
-      name: "내 정보 묶음",
+      name: "등록 정보",
       exact: true,
     });
     await region
-      .getByRole("button", { name: "묶음 추가", exact: true })
+      .getByRole("button", { name: "정보 추가", exact: true })
       .click();
     let editor = region.getByRole("form", {
-      name: "새 정보 묶음",
+      name: "새 정보 등록",
       exact: true,
     });
     await editor.getByLabel(/^이름/).fill("테스트 계정");
@@ -86,7 +86,7 @@ for (const width of [390, 1280]) {
       await editor.getByRole("checkbox", { name: label, exact: true }).check();
     await editor.getByRole("button", { name: "저장", exact: true }).click();
     await expect(region.getByRole("status")).toHaveText(
-      "정보 묶음을 저장했습니다.",
+      "등록 정보를 저장했습니다.",
     );
     let result = await (
       await page.request.get("/api/registration-profiles")
@@ -133,9 +133,9 @@ for (const width of [390, 1280]) {
     ).toEqual([]);
 
     await region
-      .getByRole("button", { name: "묶음 추가", exact: true })
+      .getByRole("button", { name: "정보 추가", exact: true })
       .click();
-    editor = region.getByRole("form", { name: "새 정보 묶음", exact: true });
+    editor = region.getByRole("form", { name: "새 정보 등록", exact: true });
     await editor.getByLabel(/^이름/).fill("다른 계정");
     await editor
       .getByRole("combobox", { name: /^구매 플랫폼/ })
@@ -175,7 +175,7 @@ for (const width of [390, 1280]) {
       "2500",
     );
     await form
-      .getByRole("combobox", { name: "사용할 정보 묶음" })
+      .getByRole("combobox", { name: "등록 정보 선택" })
       .selectOption(secondId);
     await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue(
       "다른 계정",
@@ -186,12 +186,12 @@ for (const width of [390, 1280]) {
     await expect(form.getByLabel("리뷰비", { exact: true })).toHaveValue("0");
     await form.getByLabel("계정주 (구매 계정)").fill("이번 구매 계정");
     await form
-      .getByRole("combobox", { name: "사용할 정보 묶음" })
+      .getByRole("combobox", { name: "등록 정보 선택" })
       .selectOption(firstId);
     await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue(
       "이번 구매 계정",
     );
-    await form.getByLabel("상품명").fill("묶음 선택 등록검증");
+    await form.getByLabel("상품명").fill("정보 선택 등록검증");
     await form.getByLabel("구매금액").fill("10000");
     await form.getByRole("button", { name: "상품 등록하기" }).click();
     await expect(form).toHaveCount(0);
@@ -210,7 +210,7 @@ for (const width of [390, 1280]) {
       exact: true,
     });
     await editor
-      .getByRole("checkbox", { name: "기본 묶음으로 사용", exact: true })
+      .getByRole("checkbox", { name: "기본 정보로 사용", exact: true })
       .check();
     await editor.getByRole("button", { name: "저장", exact: true }).click();
     await expect(
@@ -223,7 +223,7 @@ for (const width of [390, 1280]) {
     await form.getByRole("button", { name: "취소", exact: true }).click();
     await editor.getByRole("button", { name: "삭제", exact: true }).click();
     await editor
-      .getByRole("button", { name: "묶음 삭제", exact: true })
+      .getByRole("button", { name: "정보 삭제", exact: true })
       .click();
     await expect(region.locator(".profile-card")).toHaveCount(1);
     await expect(
@@ -300,6 +300,6 @@ test("late profiles preserve manual input and switching accounts cannot reuse an
   await expect(form.getByLabel("계정주 (구매 계정)")).toHaveValue("");
   await expect(form.getByLabel("리뷰비", { exact: true })).toHaveValue("0");
   await expect(
-    form.getByRole("combobox", { name: "사용할 정보 묶음" }),
+    form.getByRole("combobox", { name: "등록 정보 선택" }),
   ).toHaveCount(0);
 });

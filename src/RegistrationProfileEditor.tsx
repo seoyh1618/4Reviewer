@@ -98,7 +98,7 @@ export default function RegistrationProfileEditor({
   return (
     <form
       className="registration-defaults-form profile-editor"
-      aria-label={profile ? `${profileLabel(profile)} 수정` : "새 정보 묶음"}
+      aria-label={profile ? `${profileLabel(profile)} 수정` : "새 정보 등록"}
       onSubmit={save}
     >
       <fieldset disabled={busy} className="profile-fields">
@@ -210,12 +210,12 @@ export default function RegistrationProfileEditor({
               setData((d) => ({ ...d, makeDefault: e.target.checked }))
             }
           />
-          기본 묶음으로 사용
+          기본 정보로 사용
         </label>
         <details className="profile-autofill profile-full">
           <summary>상품 등록 자동 채움</summary>
           <p className="defaults-help">
-            이 묶음을 선택했을 때 채울 항목을 선택하세요. 주소와 계좌는 이곳에서
+            이 정보를 선택했을 때 채울 항목을 선택하세요. 주소와 계좌는 이곳에서
             관리해요.
           </p>
           <div className="profile-autofill-options">
@@ -300,7 +300,7 @@ export default function RegistrationProfileEditor({
           aria-labelledby={`${id}-delete`}
         >
           <p id={`${id}-delete`}>
-            이 정보 묶음을 삭제할까요? 기존 상품과 정산 기록은 유지됩니다.
+            이 등록 정보를 삭제할까요? 기존 상품과 정산 기록은 유지됩니다.
           </p>
           <div className="defaults-actions">
             <Button
@@ -311,7 +311,7 @@ export default function RegistrationProfileEditor({
               취소
             </Button>
             <Button type="button" busy={busy} onClick={remove}>
-              묶음 삭제
+              정보 삭제
             </Button>
           </div>
         </div>

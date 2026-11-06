@@ -123,11 +123,11 @@ export function registerRegistrationProfileRoutes(app, db, store) {
       const all = await store.list(req.user.id);
       const old = creating ? null : all.find((p) => p.id === req.params.id);
       if (!creating && !old)
-        return { status: 404, error: "정보 묶음을 찾을 수 없습니다." };
+        return { status: 404, error: "등록 정보를 찾을 수 없습니다." };
       if (creating && all.length >= 50)
         return {
           status: 400,
-          error: "정보 묶음은 최대 50개까지 저장할 수 있어요.",
+          error: "등록 정보는 최대 50개까지 저장할 수 있어요.",
         };
       if (p.version !== (old?.version ?? 0)) throw conflict();
       const isDefault = !!(old?.isDefault || p.makeDefault || !all.length);
@@ -174,7 +174,7 @@ export function registerRegistrationProfileRoutes(app, db, store) {
     if (!parsed.success)
       return res
         .status(400)
-        .json({ error: "삭제할 묶음을 다시 확인해 주세요." });
+        .json({ error: "삭제할 정보를 다시 확인해 주세요." });
     const result = await db.transaction(async () => {
       await store.lock(req.user.id);
       const all = await store.list(req.user.id),
@@ -199,7 +199,7 @@ export function registerRegistrationProfileRoutes(app, db, store) {
       return { profiles: await store.list(req.user.id) };
     });
     if (!result)
-      return res.status(404).json({ error: "정보 묶음을 찾을 수 없습니다." });
+      return res.status(404).json({ error: "등록 정보를 찾을 수 없습니다." });
     res.json(result);
   });
 }

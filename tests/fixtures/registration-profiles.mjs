@@ -11,7 +11,7 @@ export async function checkRegistrationProfiles(request, a, b) {
   assert.equal(initial[0].isDefault, true);
   assert.deepEqual(await list(b.cookie), []);
   const input = emptyRegistrationProfile();
-  input.values.purchaser = "묶음 테스트";
+  input.values.purchaser = "등록 정보 테스트";
   input.values.platform = "네이버";
   input.details = {
     phone: "010-0000-1234",

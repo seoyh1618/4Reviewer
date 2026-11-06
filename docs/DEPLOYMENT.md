@@ -74,8 +74,8 @@ Lightsail 방화벽에는 TCP 55432를 **승인된 관리 PC의 공인 IPv4 /32�
 - `payment_history`: 입금 기록의 추가·정정·삭제 전후 금액과 날짜. 상품 삭제 후에도 보존.
 - `review_details`, `user_review_summary` 뷰: 상품 상세와 사용자별 등록/리뷰/정산 집계.
 - `review_templates`, `template_groups`: 개인별 템플릿과 그룹.
-- `registration_profiles`: 사용자별 이름·플랫폼 단위 정보 묶음. 전화번호·주소·이메일·은행·계좌번호·예금주와 자동 채움 설정을 각각 조회 가능. DB 버전 7에서 추가. 기존 기본정보는 사용자당 기본 묶음 1개로 이전하며, 사용자당 기본 묶음은 하나만 허용. 수정·삭제 시 버전을 확인하고 소유자 범위로만 접근.
-- `registration_defaults`: 기본 묶음의 자동 채움 호환용 데이터. 이전 화면의 `/api/registration-defaults` 요청도 지원하며 기본 묶음 변경과 같은 트랜잭션으로 동기화. 주소·계좌 정보는 `registration_profiles`에만 저장.
+- `registration_profiles`: 사용자별 이름·플랫폼 단위 등록 정보. 전화번호·주소·이메일·은행·계좌번호·예금주와 자동 채움 설정을 각각 조회 가능. DB 버전 7에서 추가. 기존 기본정보는 사용자당 기본 정보 1개로 이전하며, 사용자당 기본 정보는 하나만 허용. 수정·삭제 시 버전을 확인하고 소유자 범위로만 접근.
+- `registration_defaults`: 기본 정보의 자동 채움 호환용 데이터. 이전 화면의 `/api/registration-defaults` 요청도 지원하며 기본 정보 변경과 같은 트랜잭션으로 동기화. 주소·계좌 정보는 `registration_profiles`에만 저장.
 - `account_recovery`: 선택한 인증 질문, 답변의 scrypt 해시, 무작위 복구코드의 SHA-256 해시, 버전. DB 버전 5에서 추가.
 - `recovery_tokens`, `recovery_attempts`: 10분 유효한 일회용 재설정 토큰의 해시, 계정별 15분/5회 인증 시도 제한. 이메일·아이디 별칭도 같은 제한을 적용.
 - `account_security_events`: 복구 수단 등록/변경(`recovery_setup`)과 비밀번호 재설정(`password_reset`) 시각. 비밀값 원문을 기록하지 않으며 앱은 추가/조회, DBeaver는 조회만 가능.
